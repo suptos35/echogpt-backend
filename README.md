@@ -6,6 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![NestJS](https://img.shields.io/badge/NestJS-v10-red.svg)](https://nestjs.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-v6-informational.svg)](https://www.prisma.io/)
 [![Swagger](https://img.shields.io/badge/Swagger-OpenAPI%203.0-green.svg)](http://localhost:3000/api/docs)
 
 ---
@@ -26,7 +27,7 @@ EchoGPT Backend powers a browser extension providing multi-AI model chat (OpenAI
 ## 🛠 Tech Stack
 
 - **Framework:** NestJS 10 (TypeScript)
-- **Database & ORM:** PostgreSQL 16 & Prisma ORM
+- **Database & ORM:** PostgreSQL 16 & Prisma 6 ORM
 - **API Documentation:** Swagger / OpenAPI (`@nestjs/swagger`)
 - **Authentication:** Passport JWT, Bcrypt password hashing
 - **Security & Validation:** `class-validator`, `helmet`, `@nestjs/throttler`, AES-256 encryption (`crypto`)
@@ -47,7 +48,7 @@ Copy the template environment file:
 ```bash
 cp .env.example .env
 ```
-*(The defaults are pre-configured for local Docker/Podman development).*
+*(The defaults are pre-configured with PostgreSQL running on port `5433` to prevent collision with any host database).*
 
 ### 3. Running with Docker Compose (Recommended)
 Start both PostgreSQL and the Backend in a single command:
@@ -60,16 +61,26 @@ Access the application:
 - **Swagger Documentation:** `http://localhost:3000/api/docs`
 
 ### 4. Running Locally for Development
-Start PostgreSQL:
+Start the PostgreSQL container:
 ```bash
 docker compose up postgres -d
 ```
 
-Install dependencies and start the NestJS dev server:
+Apply database migrations and populate seed data:
 ```bash
-npm install
+npx prisma migrate dev
+npm run seed
+```
+
+Start the NestJS dev server:
+```bash
 npm run start:dev
 ```
+
+### 5. Seeded Accounts for Testing
+The seed script (`npm run seed`) automatically prepares initial test accounts:
+- **Admin Account:** `admin@echogpt.app` / `Admin123!` (Role: `ADMIN`, Premium Plan)
+- **Demo User Account:** `user@echogpt.app` / `User123!` (Role: `USER`, Free Plan - 20 req/day)
 
 ---
 
