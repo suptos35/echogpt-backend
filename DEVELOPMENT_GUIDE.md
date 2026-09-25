@@ -73,57 +73,35 @@ The schema is defined in [prisma/schema.prisma](file:///mnt/sda3/projects/Appify
 | **`WebSearch`** | `web_searches` | Web search queries and cached JSON results | Belongs to `User` |
 | **`ApiUsageLog`** | `api_usage_logs`| HTTP audit logs (status, latency, endpoint) | Belongs to `User` (optional) |
 
-### ER Diagram:
-```
- Role (1) ─────────────< (N) User (1) ─────────────── (1) Subscription
-                              │
-                              ├───────────────< (N) RefreshToken
-                              ├───────────────< (N) WebSearch
-                              ├───────────────< (N) ApiUsageLog
-                              │
-                              └───────────────< (N) Conversation (1) ─────────< (N) Message
-                                                         │
-                                    AiProvider (1) ──────┘
-```
+---
+
+## 🧪 Test-Driven Development (TDD) Workflow
+
+Starting from Phase 3, all modules adhere strictly to **Test-Driven Development (TDD)**:
+1. **Red Stage:** Unit test specifications (`*.spec.ts`) and end-to-end test scenarios (`*.e2e-spec.ts`) are authored **before** any service or controller implementation code is written.
+2. **Green Stage:** Services, DTOs, controllers, and modules are written to satisfy the exact acceptance criteria defined in the tests.
+3. **Refactor Stage:** Code is optimized, typed, and structured cleanly while keeping tests 100% green.
 
 ---
 
-## 🔐 Authentication & Session Security Architecture
+## 🔐 Security & Identity Architecture
 
-### 1. Dual-Token Architecture
+### 1. Dual-Token Architecture & Rotation
 - **Access Token:** Short lifespan (`15 minutes`), signs `{ sub: userId, email, role }`. Used on every authenticated request via the `Authorization: Bearer <token>` HTTP header.
 - **Refresh Token:** Long lifespan (`7 days`), signs `{ sub: userId, email, role, jti: UUID }`.
-- **Database Storage:** The database stores **only the deterministic SHA-256 hash** of the refresh token (`token_hash`). If the database is compromised, active session refresh tokens cannot be reversed.
+- **Database Storage:** The database stores **only the deterministic SHA-256 hash** of the refresh token (`token_hash`).
 
-### 2. Refresh Token Rotation with Replay Attack Detection
-When a user calls `POST /api/auth/refresh`:
-1. The incoming refresh token is verified with `jwtService.verifyAsync()`.
-2. The hash of the token is queried in `refresh_tokens`.
-3. If the token is found and valid:
-   - The token record is **immediately deleted** from the database (single-use semantics).
-   - A brand-new pair of access token and refresh token is issued.
-   - The new refresh token hash is saved to the database.
-4. If a previously rotated token is replayed:
-   - The system detects a potential session theft.
-   - It **revokes all active sessions** for that user ID (`deleteMany({ where: { userId } })`), immediately cutting off both the attacker and alerting the user.
+### 2. Password Change Session Revocation Pattern
+When a user updates their password via `PATCH /api/users/change-password`:
+- The current password is verified against `password_hash` using `bcrypt.compare`.
+- A check prevents re-using the identical password (`BadRequestException`).
+- The new password is encrypted with 10 salt rounds of bcrypt.
+- **Crucial Security Step:** All active refresh tokens for this user are deleted (`refreshToken.deleteMany({ where: { userId } })`). Any active sessions on other devices are immediately terminated, requiring fresh login with the new credentials.
 
----
-
-## 🛠 Architectural Decisions & Rationale
-
-### 1. Framework: NestJS 10 (TypeScript)
-- **Rationale:** Modular architecture, dependency injection, and clean separation of concerns.
-- **TypeScript:** Strict type checking across DTOs, domain models, and service interfaces.
-
-### 2. ORM: Prisma 6 LTS
-- **Selection: Prisma 6 (`@prisma/client@^6.19.3`)**
-- **Rationale:** Declarative schema, deterministic migrations, type-safe client, and avoiding Prisma 7 breaking configuration changes.
-
-### 3. JWT Uniqueness via `jti` (JWT ID)
-- **Rationale:** If a user signs in rapidly within the same second, JWT payloads without high-resolution timestamps or unique identifiers produce identical tokens. Including `jti: crypto.randomUUID()` in the refresh token payload guarantees 100% cryptographic uniqueness and eliminates database unique constraint collisions.
-
-### 4. Zero-Leak Credential Security (AES-256)
-- **Rationale:** Storing third-party AI API keys in plaintext in the database is prohibited. We use AES-256 encryption via Node's native `crypto` module.
+### 3. Role-Based Access Control (RBAC)
+- Declarative `@Roles(RoleName.ADMIN, RoleName.USER)` decorator metadata.
+- `RolesGuard` verifies the JWT `role` claim against handler metadata.
+- Tested and proven via E2E: Non-admin tokens receive HTTP `403 Forbidden` on admin routes; admin tokens receive HTTP `200 OK`.
 
 ---
 
@@ -183,15 +161,22 @@ When a user calls `POST /api/auth/refresh`:
 - Implemented `RegisterDto`, `LoginDto`, `RefreshTokenDto`, `AuthResponseDto`.
 - Implemented `AuthService` with dual-token generation, bcrypt hashing, and refresh token rotation.
 - Implemented `JwtStrategy`, `JwtAuthGuard`, and `RolesGuard`.
-- Configured `AuthController` at `/api/auth` with OpenAPI documentation.
-- Created unit tests (`auth.service.spec.ts`) and end-to-end integration tests (`auth.e2e-spec.ts`) — all passing 100%.
+- Created unit tests (`auth.service.spec.ts`) and end-to-end integration tests (`auth.e2e-spec.ts`).
+
+### Step 6: User Management & Roles (Phase 3 — TDD First)
+- Wrote unit test suite `src/modules/users/users.service.spec.ts` first.
+- Wrote E2E test suite `test/users.e2e-spec.ts` first.
+- Implemented `UsersService` (profile lookup, update, password change, account deactivation).
+- Implemented `UsersController` with full Swagger annotations and admin-only test route.
+- Verified all 36 unit and E2E tests passing 100% green.
 
 ---
 
-## 🧭 Next Milestone: Phase 3 (User Management & Roles)
-In Phase 3, we will implement:
-1. `GET /api/users/profile` (returns current user profile + subscription plan status).
-2. `PATCH /api/users/profile` (allows updating first name and last name).
-3. `PATCH /api/users/change-password` (verifies current password and updates password hash).
-4. `DELETE /api/users/account` (account deactivation / deletion).
-5. Role-based guard tests proving `USER` cannot access `ADMIN`-only routes.
+## 🧭 Next Milestone: Phase 4 (Subscription Management — TDD First)
+In Phase 4, we will implement:
+1. Write Unit & E2E tests for subscription tier logic.
+2. `GET /api/subscription/status` (current tier, quota, remaining requests).
+3. `POST /api/subscription/upgrade` (upgrade FREE to PREMIUM).
+4. `POST /api/subscription/downgrade` (downgrade PREMIUM to FREE).
+5. `GET /api/subscription/remaining-requests` (returns integer count of remaining requests today).
+6. Daily quota decrement logic and automated daily reset check.

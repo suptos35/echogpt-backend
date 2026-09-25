@@ -11,8 +11,8 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 | **Phase 0** | Project Scaffold & Containerization | ✅ **Completed** | NestJS 10, ConfigModule, Swagger UI (`/api/docs`), `/health` endpoint, Dockerfile, docker-compose, `.env.example`, automated tests |
 | **Phase 1** | Database & Prisma Schema | ✅ **Completed** | Normalized PostgreSQL schema (8 core models), Prisma 6 ORM, migrations, seed script (`Roles`, `AI Providers`, `Admin`, `Demo User`), `PrismaModule` & `PrismaService` |
 | **Phase 2** | Authentication Module | ✅ **Completed** | Registration, login, logout, dual JWT, refresh token rotation with replay detection, bcrypt password hashing, `JwtAuthGuard`, `RolesGuard` |
-| **Phase 3** | User Management & Roles | ⏳ **Next** | Profile CRUD, password change, account deletion, Admin & User RBAC guards |
-| **Phase 4** | Subscription & Quota Management | ⏳ Upcoming | Free & Premium tiers, remaining quota API, downgrade/upgrade, rate limiting |
+| **Phase 3** | User Management & Roles | ✅ **Completed** | Profile retrieval (`GET /api/users/profile`), profile update (`PATCH /api/users/profile`), password change with session invalidation, account deletion, RBAC guard verification |
+| **Phase 4** | Subscription & Quota Management | ⏳ **Next** | Free & Premium tiers, remaining quota API, downgrade/upgrade, rate limiting |
 | **Phase 5** | AI Provider Management & Encryption | ⏳ Upcoming | Dynamic provider management (OpenAI, Claude, Gemini), AES-256 encrypted key storage, health check |
 | **Phase 6** | Chat API & Model Orchestration | ⏳ Upcoming | Pluggable `AiProviderAdapter`, model routing, conversation history, SSE streaming |
 | **Phase 7** | Web Search API | ⏳ Upcoming | AI-assisted search, caching layer, query history, suggestions |
@@ -49,27 +49,34 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 ### Phase 2: Authentication Module (COMPLETED)
 - [x] Installed `@nestjs/jwt@^10.2.0`, `@nestjs/passport@^10.0.3`, `passport-jwt`
 - [x] Created validation DTOs (`RegisterDto`, `LoginDto`, `RefreshTokenDto`, `AuthResponseDto`)
-- [x] Implemented `AuthService`:
-  - Secure registration with email uniqueness constraint, bcrypt hashing (10 rounds), default `FREE` subscription creation
-  - User login validating password hash and account active status
-  - Refresh Token Rotation: invalidates old token on use, issues new token pair, includes `jti` to prevent token collisions
-  - Invalidation of replayed/stolen refresh tokens (family revocation security pattern)
-  - Logout endpoint with selective or global session token invalidation
+- [x] Implemented `AuthService` with dual-token generation, bcrypt hashing, and refresh token rotation
 - [x] Implemented `JwtStrategy`, `JwtAuthGuard`, and RBAC `RolesGuard`
 - [x] Created `@CurrentUser()` and `@Roles()` decorators
 - [x] Created `AuthController` at `/api/auth` with full OpenAPI/Swagger annotations
 - [x] Unit test suite (`src/modules/auth/auth.service.spec.ts`) passing (100% green)
-- [x] E2E integration test suite (`test/auth.e2e-spec.ts`) testing complete registration, login, rotation, replay rejection, and logout (100% green)
+- [x] E2E integration test suite (`test/auth.e2e-spec.ts`) passing (100% green)
 
-### Phase 3: User Management & Roles (UPCOMING)
-- [ ] DTOs: `UpdateProfileDto`, `ChangePasswordDto`
-- [ ] Endpoints:
-  - `GET /api/users/profile` (current user profile with subscription details)
-  - `PATCH /api/users/profile` (update first/last name)
-  - `PATCH /api/users/change-password` (verify current password, hash new password)
-  - `DELETE /api/users/account` (account self-deletion or soft-delete)
-- [ ] RBAC verification test: `admin` vs `user` route access
-- [ ] Unit & E2E tests for user management
+### Phase 3: User Management & Roles (COMPLETED — Built TDD First)
+- [x] **TDD Unit Tests Written First**: Created `src/modules/users/users.service.spec.ts` covering profile retrieval, update, password change, and account deletion
+- [x] **TDD E2E Tests Written First**: Created `test/users.e2e-spec.ts` testing authenticated profile flow, updates, password change, RBAC 403 vs 200, and account deactivation
+- [x] Implemented `UpdateProfileDto`, `ChangePasswordDto`, `UserProfileDto`
+- [x] Implemented `UsersService`:
+  - `getProfile`: returns user profile and linked subscription status
+  - `updateProfile`: safely updates first and last name
+  - `changePassword`: validates current password with bcrypt, rejects identical password, hashes new password, revokes all active sessions for security
+  - `deleteAccount`: sets `isActive: false` and revokes all refresh tokens
+- [x] Implemented `UsersController` with Swagger docs and RBAC verification endpoint (`GET /api/users/admin-only-test`)
+- [x] All 36 automated unit and E2E tests passing 100% green
+
+### Phase 4: Subscription Management (UPCOMING — TDD First)
+- [ ] Write Unit tests for subscription quota calculations and limits
+- [ ] Write E2E tests for subscription status, tier upgrade, tier downgrade, and remaining requests
+- [ ] Implement `SubscriptionService` with usage decrementing and daily quota reset logic
+- [ ] Implement `SubscriptionController` at `/api/subscription`:
+  - `GET /api/subscription/status` (current tier, quota, remaining requests)
+  - `POST /api/subscription/upgrade` (upgrade FREE to PREMIUM)
+  - `POST /api/subscription/downgrade` (downgrade PREMIUM to FREE)
+  - `GET /api/subscription/remaining-requests` (returns integer count of remaining queries today)
 
 ---
 

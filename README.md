@@ -19,6 +19,7 @@ EchoGPT Backend powers a browser extension providing multi-AI model chat (OpenAI
 - **Multi-AI Provider Engine:** Unified abstraction layer supporting OpenAI, Anthropic Claude, and Google Gemini with health checks and dynamic default selection.
 - **Enterprise-Grade Security:** Stored AI provider API keys are encrypted at rest using AES-256 before writing to PostgreSQL. Raw keys are never leaked in API responses.
 - **JWT Authentication with Refresh Rotation:** Dual-token JWT authentication with hashed refresh tokens stored in database and rotated on each refresh.
+- **User & Role Management:** User profile CRUD, password change with session revocation, and RBAC guards (`ADMIN`, `USER`).
 - **Subscription & Quota Management:** Free vs. Premium tiers with remaining request tracking and strict rate limiting.
 - **Interactive OpenAPI Documentation:** Full Swagger UI available at `/api/docs` with Bearer auth support and request/response schemas.
 
@@ -32,7 +33,7 @@ EchoGPT Backend powers a browser extension providing multi-AI model chat (OpenAI
 - **Authentication:** Passport JWT, Bcrypt password hashing
 - **Security & Validation:** `class-validator`, `helmet`, `@nestjs/throttler`, AES-256 encryption (`crypto`)
 - **Containerization:** Docker & Docker Compose / Podman
-- **Testing:** Jest (Unit) & Supertest (E2E)
+- **Testing:** Jest (Unit) & Supertest (E2E) — Built with **TDD First** methodology
 
 ---
 
@@ -104,20 +105,22 @@ npm run test:cov
 | Module | Method | Endpoint | Description | Auth |
 |---|---|---|---|---|
 | **System** | `GET` | `/health` | System health and uptime | Public |
-| **Auth** | `POST` | `/api/auth/register` | Register new account | Public |
-| **Auth** | `POST` | `/api/auth/login` | Login and receive access/refresh tokens | Public |
+| **Auth** | `POST` | `/api/auth/register` | Register new account with FREE tier | Public |
+| **Auth** | `POST` | `/api/auth/login` | Login and receive dual JWT tokens | Public |
 | **Auth** | `POST` | `/api/auth/refresh` | Refresh access token (rotates token) | Refresh JWT |
-| **Auth** | `POST` | `/api/auth/logout` | Invalidate active refresh token | JWT |
-| **Users** | `GET` | `/api/users/profile` | Get current user profile | JWT |
-| **Users** | `PATCH` | `/api/users/profile` | Update profile details | JWT |
-| **Users** | `PATCH` | `/api/users/change-password` | Change user password | JWT |
-| **Subscription** | `GET` | `/api/subscription/status` | Current tier & remaining quota | JWT |
-| **AI Providers**| `GET` | `/api/providers` | List available AI providers | JWT |
-| **AI Providers**| `POST` | `/api/admin/providers` | Add/configure provider (Encrypted API key) | Admin |
-| **Chat** | `POST` | `/api/chat/send-prompt` | Execute prompt through selected AI provider | JWT |
-| **Chat** | `GET` | `/api/chat/history` | Retrieve conversation history | JWT |
-| **Search** | `POST` | `/api/search` | AI-assisted web search | JWT |
-| **Admin** | `GET` | `/api/admin/dashboard` | Dashboard metrics & system stats | Admin |
+| **Auth** | `POST` | `/api/auth/logout` | Invalidate active refresh token | JWT Bearer |
+| **Users** | `GET` | `/api/users/profile` | Get current user profile & subscription tier | JWT Bearer |
+| **Users** | `PATCH` | `/api/users/profile` | Update user first & last name | JWT Bearer |
+| **Users** | `PATCH` | `/api/users/change-password` | Change password (revokes old sessions) | JWT Bearer |
+| **Users** | `DELETE`| `/api/users/account` | Deactivate account and revoke sessions | JWT Bearer |
+| **Users** | `GET` | `/api/users/admin-only-test` | RBAC test route (403 for User, 200 for Admin) | Admin Bearer |
+| **Subscription** | `GET` | `/api/subscription/status` | Current tier & remaining quota | JWT Bearer |
+| **AI Providers**| `GET` | `/api/providers` | List available AI providers | JWT Bearer |
+| **AI Providers**| `POST` | `/api/admin/providers` | Add/configure provider (Encrypted API key) | Admin Bearer |
+| **Chat** | `POST` | `/api/chat/send-prompt` | Execute prompt through selected AI provider | JWT Bearer |
+| **Chat** | `GET` | `/api/chat/history` | Retrieve conversation history | JWT Bearer |
+| **Search** | `POST` | `/api/search` | AI-assisted web search | JWT Bearer |
+| **Admin** | `GET` | `/api/admin/dashboard` | Dashboard metrics & system stats | Admin Bearer |
 
 *(Explore full schema and interactive test sandbox at `http://localhost:3000/api/docs`)*
 
