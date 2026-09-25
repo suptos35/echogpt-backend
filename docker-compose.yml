@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: echogpt-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-echogpt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-echogpt_password}
+      POSTGRES_DB: ${POSTGRES_DB:-echogpt_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-echogpt} -d ${POSTGRES_DB:-echogpt_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: echogpt-backend
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-echogpt}:${POSTGRES_PASSWORD:-echogpt_password}@postgres:5432/${POSTGRES_DB:-echogpt_db}?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-echogpt_super_secret_jwt_access_key_change_in_production}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-echogpt_super_secret_jwt_refresh_key_change_in_production}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-01234567890123456789012345678901}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      BRAVE_SEARCH_API_KEY: ${BRAVE_SEARCH_API_KEY:-}
+
+volumes:
+  postgres_data:
+    driver: local
