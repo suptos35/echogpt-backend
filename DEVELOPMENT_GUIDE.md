@@ -88,121 +88,110 @@ The schema is defined in [prisma/schema.prisma](file:///mnt/sda3/projects/Appify
 
 ---
 
+## 🔐 Authentication & Session Security Architecture
+
+### 1. Dual-Token Architecture
+- **Access Token:** Short lifespan (`15 minutes`), signs `{ sub: userId, email, role }`. Used on every authenticated request via the `Authorization: Bearer <token>` HTTP header.
+- **Refresh Token:** Long lifespan (`7 days`), signs `{ sub: userId, email, role, jti: UUID }`.
+- **Database Storage:** The database stores **only the deterministic SHA-256 hash** of the refresh token (`token_hash`). If the database is compromised, active session refresh tokens cannot be reversed.
+
+### 2. Refresh Token Rotation with Replay Attack Detection
+When a user calls `POST /api/auth/refresh`:
+1. The incoming refresh token is verified with `jwtService.verifyAsync()`.
+2. The hash of the token is queried in `refresh_tokens`.
+3. If the token is found and valid:
+   - The token record is **immediately deleted** from the database (single-use semantics).
+   - A brand-new pair of access token and refresh token is issued.
+   - The new refresh token hash is saved to the database.
+4. If a previously rotated token is replayed:
+   - The system detects a potential session theft.
+   - It **revokes all active sessions** for that user ID (`deleteMany({ where: { userId } })`), immediately cutting off both the attacker and alerting the user.
+
+---
+
 ## 🛠 Architectural Decisions & Rationale
 
 ### 1. Framework: NestJS 10 (TypeScript)
-- **Rationale:** NestJS enforces modular architecture, dependency injection, and clean separation of concerns (Controllers, Services, Modules).
-- **TypeScript:** Guarantees strict typing across DTOs, domain models, and service interfaces, minimizing runtime crashes.
+- **Rationale:** Modular architecture, dependency injection, and clean separation of concerns.
+- **TypeScript:** Strict type checking across DTOs, domain models, and service interfaces.
 
 ### 2. ORM: Prisma 6 LTS
 - **Selection: Prisma 6 (`@prisma/client@^6.19.3`)**
-- **Rationale:** 
-  1. Declarative, single source of truth schema file (`prisma/schema.prisma`).
-  2. Automatic, deterministic migration generation (`prisma migrate`).
-  3. Fully type-safe generated client (`@prisma/client`).
-  4. Prisma Studio provides an instant local visual database dashboard for inspection.
-  5. Pinned to Prisma 6 to preserve universal `url = env("DATABASE_URL")` standard support, avoiding the breaking architectural shift of Prisma 7 (`prisma.config.ts` requirement).
+- **Rationale:** Declarative schema, deterministic migrations, type-safe client, and avoiding Prisma 7 breaking configuration changes.
 
-### 3. Dual-Token JWT Authentication with Refresh Token Rotation
-- **Rationale:**
-  - Access tokens have a short lifespan (15 minutes), mitigating the impact of token interception.
-  - Refresh tokens have a longer lifespan (7 days) and are **stored as bcrypt hashes in PostgreSQL**.
-  - On every refresh request, the old refresh token is immediately invalidated and a new one is issued (Refresh Token Rotation).
+### 3. JWT Uniqueness via `jti` (JWT ID)
+- **Rationale:** If a user signs in rapidly within the same second, JWT payloads without high-resolution timestamps or unique identifiers produce identical tokens. Including `jti: crypto.randomUUID()` in the refresh token payload guarantees 100% cryptographic uniqueness and eliminates database unique constraint collisions.
 
 ### 4. Zero-Leak Credential Security (AES-256)
-- **Rationale:** 
-  - Storing third-party AI API keys in plaintext in the database is a critical vulnerability.
-  - We use AES-256 encryption via Node's native `crypto` module.
-  - Provider keys are encrypted before database insertion. The secret encryption key is loaded only from `.env`.
-  - API responses mask all keys (e.g. `sk-proj-****`), completely preventing raw key leakage.
+- **Rationale:** Storing third-party AI API keys in plaintext in the database is prohibited. We use AES-256 encryption via Node's native `crypto` module.
 
 ---
 
 ## 🚧 Problems Faced & Solutions Applied
 
 ### Challenge 1: Host Machine Environment Constraints
-- **Problem:**
-  - System audit revealed that `node`, `npm`, and `docker` were not available in the global system `$PATH`.
-  - Global `sudo` access was password-protected and unavailable.
-  - The machine had `python3` and `uv` installed, and `podman 4.9.3` available.
-- **Solution:**
-  - Created a virtualized environment [`.venv`](file:///mnt/sda3/projects/Appifydevs/.venv) using `uv`.
-  - Integrated `nodeenv` to install **Node.js LTS v22.14.0** and **npm 10.9.2** directly within `.venv/bin`.
-  - Installed `podman-compose` inside the environment and established symlinks for `docker` -> `podman` and `docker-compose` -> `podman-compose`.
-  - **Result:** Complete standalone workspace capable of compiling TypeScript, installing packages, running Nest CLI, and managing containers with zero root permissions required.
+- **Problem:** `node`, `npm`, and `docker` missing from global `$PATH`; no `sudo` password.
+- **Solution:** Initialized `.venv` using `uv`, installed Node.js 22 LTS and npm 10 via `nodeenv`, configured Podman aliases for Docker.
 
 ### Challenge 2: Nest CLI v11 Module Cycle / ESM Conflict
-- **Problem:**
-  - When installing `@nestjs/cli` latest (v11), running `nest --version` resulted in an `ERR_REQUIRE_CYCLE_MODULE` error caused by an upstream ESM import issue between `@angular-devkit/schematics` and `ora`.
-- **Solution:**
-  - Pinned the CLI to stable `@nestjs/cli@10.4.9`.
+- **Problem:** `ERR_REQUIRE_CYCLE_MODULE` on Nest CLI v11.
+- **Solution:** Pinned CLI to `@nestjs/cli@10.4.9`.
 
-### Challenge 3: Peer Dependency Mismatch with `@nestjs/config`
-- **Problem:**
-  - Running `npm install @nestjs/config` attempted to fetch v12, which declared a strict peer dependency on `@nestjs/common@^11.0.0 || ^12.0.0`, conflicting with the NestJS 10 core scaffold.
-- **Solution:**
-  - Explicitly installed matching version ranges: `@nestjs/config@^3.2.3`, `@nestjs/swagger@^7.4.2`, and `swagger-ui-express@^5.0.1`.
+### Challenge 3: Peer Dependency Mismatch with Nest 10 Packages
+- **Problem:** Installing `@nestjs/config` and `@nestjs/passport` without version constraints pulled v12 packages targeting Nest 11/12.
+- **Solution:** Pinned `@nestjs/config@^3.2.3`, `@nestjs/jwt@^10.2.0`, `@nestjs/passport@^10.0.3`, and `@nestjs/swagger@^7.4.2`.
 
 ### Challenge 4: Prisma 7 Schema URL Deprecation Error (`P1012`)
-- **Problem:**
-  - Installing `prisma@latest` fetched Prisma 7.10.0, which removed support for `url = env("DATABASE_URL")` in `schema.prisma`, demanding a new `prisma.config.ts` and custom driver adapters.
-- **Solution:**
-  - Pinned the ORM to **Prisma 6 LTS (`@prisma/client@^6.19.3` and `prisma@^6.19.3`)**.
-  - Restored standard NestJS + Prisma datasource conventions seamlessly.
+- **Problem:** Prisma 7 removed `url = env("DATABASE_URL")` from `schema.prisma`.
+- **Solution:** Pinned to Prisma 6 LTS (`6.19.3`).
 
 ### Challenge 5: Host PostgreSQL Port 5432 Collision
-- **Problem:**
-  - A native PostgreSQL 16 instance was already running on host port `5432` without credentials for the local user (`FATAL: role "sup35" does not exist`). Attempting to bind a container to `5432` resulted in port conflicts.
-- **Solution:**
-  - Remapped container PostgreSQL to port `5433:5432`.
-  - Updated [.env](file:///mnt/sda3/projects/Appifydevs/.env), [.env.example](file:///mnt/sda3/projects/Appifydevs/.env.example), and [docker-compose.yml](file:///mnt/sda3/projects/Appifydevs/docker-compose.yml) to use port `5433` by default.
+- **Problem:** Native PostgreSQL was already running on host port 5432 with peer authentication.
+- **Solution:** Remapped container PostgreSQL to port `5433:5432`.
 
 ### Challenge 6: Podman Short-Name Image Resolution
-- **Problem:**
-  - Podman threw: `Error: short-name "postgres:16-alpine" did not resolve to an alias`.
-- **Solution:**
-  - Fully qualified the container image name to `docker.io/library/postgres:16-alpine`.
+- **Problem:** `Error: short-name "postgres:16-alpine" did not resolve to an alias`.
+- **Solution:** Fully qualified the image to `docker.io/library/postgres:16-alpine`.
+
+### Challenge 7: Refresh Token Hash Collision on Rapid Generation
+- **Problem:** Fast back-to-back token issuance within the same second generated identical token strings, failing the database unique constraint on `token_hash`.
+- **Solution:** Injected RFC 7519 `jti: crypto.randomUUID()` into every refresh token payload, guaranteeing unique hashes on every token creation.
 
 ---
 
 ## 📅 Chronological Step-by-Step Implementation Log
 
 ### Step 0: Environment Audit & Virtual Environment Setup
-- Detected existing tools: `git 2.43.0`, `gh 2.45.0` (authenticated as `suptos35`).
-- Created project virtual environment `.venv`.
-- Deployed Node.js 22.14.0 and npm 10.9.2.
-- Configured Podman compatibility aliases for Docker commands.
+- Initialized `.venv` bundling Node.js 22.14.0, npm 10.9.2, and rootless Podman container support.
 
 ### Step 1: NestJS Application Scaffold
-- Created [.gitignore](file:///mnt/sda3/projects/Appifydevs/.gitignore) excluding `node_modules`, `dist`, `.env`, and `.venv`.
-- Scaffolded project structure using `nest new echogpt-backend --directory . --package-manager npm --skip-git`.
-- Installed dependencies: `@nestjs/config`, `@nestjs/swagger`, `swagger-ui-express`, `class-validator`, `class-transformer`.
+- Scaffolded project structure using Nest CLI 10.
+- Installed Config and Swagger modules.
 
 ### Step 2: System Health & OpenAPI Setup
-- Implemented [configuration.ts](file:///mnt/sda3/projects/Appifydevs/src/config/configuration.ts) for environment management.
-- Implemented [HealthController](file:///mnt/sda3/projects/Appifydevs/src/modules/health/health.controller.ts) at `/health` returning system uptime and service identity.
-- Registered [HealthModule](file:///mnt/sda3/projects/Appifydevs/src/modules/health/health.module.ts) in [AppModule](file:///mnt/sda3/projects/Appifydevs/src/app.module.ts).
-- Configured [main.ts](file:///mnt/sda3/projects/Appifydevs/src/main.ts) with Swagger documentation at `/api/docs`, CORS, and global validation pipes.
+- Configured `/health` endpoint and Swagger at `/api/docs`.
 
 ### Step 3: Containerization & Docker Orchestration
-- Created multi-stage [Dockerfile](file:///mnt/sda3/projects/Appifydevs/Dockerfile) optimizing image footprint.
-- Created [docker-compose.yml](file:///mnt/sda3/projects/Appifydevs/docker-compose.yml) orchestrating `postgres:16-alpine` (port 5433) and `backend` services.
-- Created [.env.example](file:///mnt/sda3/projects/Appifydevs/.env.example) and default [.env](file:///mnt/sda3/projects/Appifydevs/.env).
+- Created multi-stage Dockerfile and docker-compose.yml running PostgreSQL 16 on port 5433.
 
 ### Step 4: Database Modeling & Prisma Schema (Phase 1)
-- Designed normalized schema with all 8 entities in [prisma/schema.prisma](file:///mnt/sda3/projects/Appifydevs/prisma/schema.prisma).
-- Generated initial migration `20260925121126_init` applied to PostgreSQL.
-- Implemented [prisma/seed.ts](file:///mnt/sda3/projects/Appifydevs/prisma/seed.ts) populating roles, providers, and accounts.
-- Implemented [PrismaService](file:///mnt/sda3/projects/Appifydevs/src/common/prisma/prisma.service.ts) and [PrismaModule](file:///mnt/sda3/projects/Appifydevs/src/common/prisma/prisma.module.ts).
-- Verified build and test suites pass 100%.
+- Designed 8 core entities in `schema.prisma`.
+- Ran migration `20260925121126_init`.
+- Created database seed script with default roles, providers, and test accounts.
+
+### Step 5: Authentication Module (Phase 2)
+- Implemented `RegisterDto`, `LoginDto`, `RefreshTokenDto`, `AuthResponseDto`.
+- Implemented `AuthService` with dual-token generation, bcrypt hashing, and refresh token rotation.
+- Implemented `JwtStrategy`, `JwtAuthGuard`, and `RolesGuard`.
+- Configured `AuthController` at `/api/auth` with OpenAPI documentation.
+- Created unit tests (`auth.service.spec.ts`) and end-to-end integration tests (`auth.e2e-spec.ts`) — all passing 100%.
 
 ---
 
-## 🧭 Next Milestone: Phase 2 (Authentication Module)
-In Phase 2, we will implement:
-1. Registration with email uniqueness check and bcrypt password hashing.
-2. Login generating dual JWT tokens (`accessToken` 15m, `refreshToken` 7d).
-3. Hashed refresh token storage and Refresh Token Rotation on `/api/auth/refresh`.
-4. Invalidation of tokens on `/api/auth/logout`.
-5. `JwtAuthGuard` and `@CurrentUser()` decorator.
-6. Comprehensive unit and E2E test coverage.
+## 🧭 Next Milestone: Phase 3 (User Management & Roles)
+In Phase 3, we will implement:
+1. `GET /api/users/profile` (returns current user profile + subscription plan status).
+2. `PATCH /api/users/profile` (allows updating first name and last name).
+3. `PATCH /api/users/change-password` (verifies current password and updates password hash).
+4. `DELETE /api/users/account` (account deactivation / deletion).
+5. Role-based guard tests proving `USER` cannot access `ADMIN`-only routes.
