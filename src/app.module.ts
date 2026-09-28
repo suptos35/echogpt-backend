@@ -10,6 +10,8 @@ import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { SubscriptionModule } from './modules/subscription/subscription.module';
+import { CryptoModule } from './common/crypto/crypto.module';
+import { ProvidersModule } from './modules/providers/providers.module';
 
 @Module({
   imports: [
@@ -72,6 +74,8 @@ import { SubscriptionModule } from './modules/subscription/subscription.module';
     AuthModule,
     UsersModule,
     SubscriptionModule,
+    CryptoModule,
+    ProvidersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -201,13 +201,42 @@ When a user updates their password via `PATCH /api/users/change-password`:
 
 ---
 
-## 🧭 Next Milestone: Phase 5 (AI Provider Management & Encryption — TDD First)
-In Phase 5, we will implement:
-1. Write Unit & E2E tests for `CryptoService` (AES-256-CBC) and AI Provider management endpoints.
-2. `CryptoService`: AES-256 symmetric encryption and decryption with random IV for provider API keys.
-3. `ProvidersService` & `ProvidersController` (`/api/providers`):
-   - `GET /api/providers` (list active providers without leaking raw API keys).
-   - `POST /api/providers` (configure OpenAI, Claude, or Gemini credentials with encrypted key storage).
-   - `PATCH /api/providers/:id` (update provider configurations or rotate API keys).
-   - `POST /api/providers/:id/set-default` (designate system default AI provider).
-   - `GET /api/providers/:id/health` (verify provider connectivity).
+### Step 9: AI Provider Management & AES-256 Key Encryption (Phase 5 — TDD First)
+- **TDD Tests First**:
+  - Authored unit test suite `src/common/crypto/crypto.service.spec.ts` (5 tests) verifying AES-256-CBC encryption/decryption roundtrip, non-deterministic ciphertext with random 16-byte initialization vectors (IV), and malformed ciphertext error handling.
+  - Authored unit test suite `src/modules/providers/providers.service.spec.ts` (9 tests) testing provider listing, key sanitization, default switching with transactional exclusivity, and mock health checks.
+  - Authored E2E test suite `test/providers.e2e-spec.ts` (11 tests) validating public/user read access, strict exclusion of raw and encrypted keys in HTTP payloads, admin-only RBAC protection (403 for non-admin on create/update/set-default), key update encryption, and health checks.
+- **Security & Encryption Architecture**:
+  - Implemented `CryptoService` (`src/common/crypto/crypto.service.ts`):
+    - Uses Node.js native `crypto` module with `aes-256-cbc`.
+    - Enforces strict 32-byte (256-bit) encryption key from environment.
+    - Generates cryptographically secure 16-byte random IV per encryption operation.
+    - Serializes output as `<iv_hex>:<ciphertext_hex>`.
+  - Database Audit Verification:
+    - Queried live PostgreSQL database directly to confirm column `encrypted_api_key` stores ciphertext only and never raw keys.
+- **API Endpoints Implemented** (`/api/providers`):
+  - `GET /api/providers`: Lists active providers with model options (keys redacted).
+  - `GET /api/providers/:id`: Retrieves individual provider configuration.
+  - `POST /api/providers`: Admin endpoint to register new providers with encrypted credentials.
+  - `PATCH /api/providers/:id`: Admin endpoint to update model parameters or rotate encrypted keys.
+  - `POST /api/providers/:id/set-default`: Admin endpoint to set system default provider.
+  - `GET /api/providers/:id/health`: Diagnostics endpoint for provider operational status.
+- **System Verification**:
+  - Total automated test suite expanded to **81 passing tests (42 unit, 39 E2E)** across 12 test suites with 100% green pass rate.
+
+---
+
+## 🧭 Next Milestone: Phase 6 (Chat API & Model Orchestration — TDD First)
+In Phase 6, we will implement:
+1. Write Unit tests for `AiProviderAdapter` implementations (OpenAI, Claude, Gemini) with mocked HTTP client.
+2. Write E2E tests for conversation creation, message persistence, history retrieval, and quota decrement integration.
+3. Pluggable `AiProviderAdapter` interface with:
+   - `GeminiAdapter` (Google Gemini 1.5 Flash / Pro)
+   - `OpenAiAdapter` (OpenAI GPT-4o / GPT-4o-mini)
+   - `ClaudeAdapter` (Anthropic Claude 3.5 Sonnet)
+4. `ChatService` and `ChatController`:
+   - `POST /api/chat/send-prompt`: Routes prompt through selected or default provider, verifies and decrements subscription quota (enforcing 429), stores conversation & message history.
+   - `GET /api/chat/conversations`: Retrieves user conversation history.
+   - `GET /api/chat/conversations/:id`: Retrieves full conversation thread.
+   - `DELETE /api/chat/conversations/:id`: Deletes conversation and messages.
+   - Bonus: SSE (Server-Sent Events) streaming endpoint.

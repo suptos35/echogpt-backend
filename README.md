@@ -119,8 +119,12 @@ npm run test:cov
 | **Subscription** | `POST`| `/api/subscription/upgrade` | Upgrade subscription to PREMIUM (500 req/day) | JWT Bearer |
 | **Subscription** | `POST`| `/api/subscription/downgrade`| Downgrade subscription to FREE (20 req/day) | JWT Bearer |
 | **Subscription** | `GET` | `/api/subscription/remaining-requests` | Get remaining daily query count | JWT Bearer |
-| **AI Providers**| `GET` | `/api/providers` | List available AI providers | JWT Bearer |
-| **AI Providers**| `POST` | `/api/admin/providers` | Add/configure provider (Encrypted API key) | Admin Bearer |
+| **AI Providers**| `GET` | `/api/providers` | List available AI providers (keys sanitized) | JWT Bearer |
+| **AI Providers**| `GET` | `/api/providers/:id` | Get specific provider configuration | JWT Bearer |
+| **AI Providers**| `POST` | `/api/providers` | Configure new provider (AES-256 encrypted key) | Admin Bearer |
+| **AI Providers**| `PATCH`| `/api/providers/:id` | Update provider models or rotate encrypted key | Admin Bearer |
+| **AI Providers**| `POST` | `/api/providers/:id/set-default` | Set global default AI provider | Admin Bearer |
+| **AI Providers**| `GET` | `/api/providers/:id/health` | Diagnostic health check | JWT Bearer |
 | **Chat** | `POST` | `/api/chat/send-prompt` | Execute prompt through selected AI provider | JWT Bearer |
 | **Chat** | `GET` | `/api/chat/history` | Retrieve conversation history | JWT Bearer |
 | **Search** | `POST` | `/api/search` | AI-assisted web search | JWT Bearer |

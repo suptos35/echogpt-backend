@@ -13,8 +13,8 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 | **Phase 2** | Authentication Module | ✅ **Completed** | Registration, login, logout, dual JWT, refresh token rotation with replay detection, bcrypt password hashing, `JwtAuthGuard`, `RolesGuard` |
 | **Phase 3** | User Management & Roles | ✅ **Completed** | Profile retrieval (`GET /api/users/profile`), profile update (`PATCH /api/users/profile`), password change with session invalidation, account deletion, RBAC guard verification |
 | **Phase 4** | Subscription & Quota Management | ✅ **Completed** | Free (20/day) & Premium (500/day) plans, auto daily quota reset, upgrade/downgrade endpoints, quota decrementing, 429 enforcement |
-| **Phase 5** | AI Provider Management & Encryption | ⏳ **Next** | Dynamic provider management (OpenAI, Claude, Gemini), AES-256 encrypted key storage, health check |
-| **Phase 6** | Chat API & Model Orchestration | ⏳ Upcoming | Pluggable `AiProviderAdapter`, model routing, conversation history, SSE streaming |
+| **Phase 5** | AI Provider Management & Encryption | ✅ **Completed** | AES-256-CBC encrypted API key storage, random IVs, provider CRUD, default selection, health checks, key leakage prevention |
+| **Phase 6** | Chat API & Model Orchestration | ⏳ **Next** | Pluggable `AiProviderAdapter`, model routing (Gemini/OpenAI/Claude), conversation history, SSE streaming |
 | **Phase 7** | Web Search API | ⏳ Upcoming | AI-assisted search, caching layer, query history, suggestions |
 | **Phase 8** | Admin Panel APIs | ⏳ Upcoming | Analytics dashboard, user oversight, subscription management, request logs |
 | **Phase 9** | Hardening & Security Pass | ⏳ Upcoming | Global exception filter, helmet, rate throttler, validation DTOs, full OpenAPI annotations |
@@ -91,16 +91,35 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 - [x] Registered `SubscriptionModule` in `AppModule` and exported `SubscriptionService`.
 - [x] Full automated test suite passing: **56 tests total (28 unit, 28 E2E)**.
 
-### Phase 5: AI Provider Management & Encryption (UPCOMING — TDD First)
-- [ ] Write Unit tests for `CryptoService` AES-256-CBC encryption/decryption roundtrip and secret key validation.
-- [ ] Write E2E tests for AI Provider CRUD, default selection, enable/disable, and health-check endpoints.
-- [ ] Implement `CryptoService` (`src/common/crypto/crypto.service.ts`) using Node.js `crypto` with initialization vectors (IV).
-- [ ] Implement `ProvidersService` and `ProvidersController` (`/api/providers`):
-  - `GET /api/providers` (list active providers, never returning plaintext API key)
-  - `POST /api/providers` (create/configure provider credentials with encrypted key)
-  - `PATCH /api/providers/:id` (update provider models, baseURL, or rotate key)
-  - `POST /api/providers/:id/set-default` (set system default AI provider)
-  - `GET /api/providers/:id/health` (health check pinging mock client in test mode)
+### Phase 5: AI Provider Management & Encryption (COMPLETED — Built TDD First)
+- [x] **TDD Unit Tests Written First**:
+  - `src/common/crypto/crypto.service.spec.ts` (5 tests): AES-256-CBC roundtrip, random IV generation uniqueness, corruption error handling, null handling.
+  - `src/modules/providers/providers.service.spec.ts` (9 tests): list providers without leaking keys, get by ID, key encryption on creation, default provider switching, and mock health checks.
+- [x] **TDD E2E Tests Written First**:
+  - `test/providers.e2e-spec.ts` (11 tests): list providers, authenticated access, strict key confidentiality (no `apiKey` or `encryptedApiKey` leaked in response payload), admin-only RBAC protection (403 for standard user on create/update/set-default), key update encryption, and health checks.
+- [x] Implemented `CryptoService` (`src/common/crypto/crypto.service.ts`) with AES-256-CBC and random 16-byte IVs.
+- [x] Exported `CryptoModule` globally.
+- [x] Implemented `CreateProviderDto`, `UpdateProviderDto`, `ProviderResponseDto`, and `ProviderHealthDto`.
+- [x] Implemented `ProvidersService` and `ProvidersController` (`/api/providers`):
+  - `GET /api/providers` (lists active AI providers with sanitized response)
+  - `GET /api/providers/:id` (retrieves single provider configuration)
+  - `POST /api/providers` (Admin-only: registers provider with AES-256 encrypted key)
+  - `PATCH /api/providers/:id` (Admin-only: updates models/baseURL/rotates key)
+  - `POST /api/providers/:id/set-default` (Admin-only: transactional default provider switch)
+  - `GET /api/providers/:id/health` (diagnostics check without external network dependencies)
+- [x] Verified database column storage: confirmed PostgreSQL column `encrypted_api_key` contains `<iv_hex>:<ciphertext_hex>` and never raw plaintext.
+- [x] Full automated test suite passing: **81 tests total (42 unit, 39 E2E)**.
+
+### Phase 6: Chat API & Model Orchestration (UPCOMING — TDD First)
+- [ ] Write Unit tests for `AiProviderAdapter` implementations (OpenAI, Claude, Gemini) with mocked HTTP client.
+- [ ] Write E2E tests for conversation creation, message persistence, history retrieval, and quota decrement integration.
+- [ ] Implement `AiProviderAdapter` interface with `GeminiAdapter`, `OpenAiAdapter`, and `ClaudeAdapter`.
+- [ ] Implement `ChatService` and `ChatController`:
+  - `POST /api/chat/send-prompt`: Routes through default/selected provider, checks and decrements subscription quota (enforces 429), stores conversation & message history.
+  - `GET /api/chat/conversations`: Retrieves user conversation list.
+  - `GET /api/chat/conversations/:id`: Retrieves full conversation message history.
+  - `DELETE /api/chat/conversations/:id`: Deletes conversation and messages.
+  - Optional bonus: SSE (Server-Sent Events) streaming endpoint.
 
 ---
 
@@ -109,6 +128,6 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 | Requirement | Stage | Status | Notes |
 |---|---|---|---|
 | Review Database Schema | Phase 1 | 🔍 Ready for Review | Review `prisma/schema.prisma` |
-| Google Gemini API Key | Phase 6 | ⏳ Pending | Needed for live testing the free AI provider tier |
-| OpenAI / Claude API Keys | Phase 5-6 | ⚪ Optional | Not required; unit tests use mocked HTTP adapters |
-| Review AES-256 Key Storage | Phase 5 | ⏳ Pending | Security audit on database ciphertext storage |
+| Review AES-256 Key Storage | Phase 5 | 🔍 Ready for Review | Verified PostgreSQL column `encrypted_api_key` stores ciphertext only |
+| Google Gemini API Key | Phase 6 | ⏳ Pending | Free tier API key needed for optional real live test (unit/e2e use mocks) |
+| OpenAI / Claude API Keys | Phase 5-6 | ⚪ Optional | Not required; unit/e2e tests use mocked HTTP adapters |
