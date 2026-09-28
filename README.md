@@ -21,6 +21,7 @@ EchoGPT Backend powers a browser extension providing multi-AI model chat (OpenAI
 - **JWT Authentication with Refresh Rotation:** Dual-token JWT authentication with hashed refresh tokens stored in database and rotated on each refresh.
 - **User & Role Management:** User profile CRUD, password change with session revocation, and RBAC guards (`ADMIN`, `USER`).
 - **Subscription & Quota Management:** Free vs. Premium tiers with remaining request tracking and strict rate limiting.
+- **Admin Panel & System Oversight:** Comprehensive administrative APIs for metrics aggregation, user account activation/deactivation with instant session invalidation, subscription audits, chronological API request logs, and real-time database latency diagnostics.
 - **Interactive OpenAPI Documentation:** Full Swagger UI available at `/api/docs` with Bearer auth support and request/response schemas.
 
 ---
@@ -134,7 +135,12 @@ npm run test:cov
 | **Search** | `GET` | `/api/search/history` | Retrieve user web search history log | JWT Bearer |
 | **Search** | `GET` | `/api/search/recent` | Retrieve recent distinct search queries | JWT Bearer |
 | **Search** | `GET` | `/api/search/suggestions`| Autocomplete suggestions matching search prefix | JWT Bearer |
-| **Admin** | `GET` | `/api/admin/dashboard` | Dashboard metrics & system stats | Admin Bearer |
+| **Admin** | `GET` | `/api/admin/dashboard` | Dashboard metrics & system-wide stats | Admin Bearer |
+| **Admin** | `GET` | `/api/admin/users` | List users with pagination and role/status filters | Admin Bearer |
+| **Admin** | `PATCH`| `/api/admin/users/:id/status` | Activate/deactivate user (revokes active sessions) | Admin Bearer |
+| **Admin** | `GET` | `/api/admin/subscriptions` | Subscriptions breakdown across FREE & PREMIUM | Admin Bearer |
+| **Admin** | `GET` | `/api/admin/logs` | Query chronological API request logs & audit trail | Admin Bearer |
+| **Admin** | `GET` | `/api/admin/health` | Comprehensive system health & diagnostics | Admin Bearer |
 
 *(Explore full schema and interactive test sandbox at `http://localhost:3000/api/docs`)*
 
@@ -144,3 +150,4 @@ npm run test:cov
 - [CHECKLIST.md](file:///mnt/sda3/projects/Appifydevs/CHECKLIST.md): Phase progress tracking.
 - [DEVELOPMENT_GUIDE.md](file:///mnt/sda3/projects/Appifydevs/DEVELOPMENT_GUIDE.md): Architecture decisions, security details, and problem-solving logs.
 - [echogpt-backend-buildplan.md](file:///mnt/sda3/projects/Appifydevs/echogpt-backend-buildplan.md): Assignment specification and build playbook.
+

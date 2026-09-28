@@ -276,14 +276,35 @@ When a user updates their password via `PATCH /api/users/change-password`:
 
 ---
 
-## 🧭 Next Milestone: Phase 8 (Admin Panel APIs & Oversight — TDD First)
-In Phase 8, we will implement:
-1. Write Unit tests for `AdminService` dashboard metrics, user oversight, and logs filtering.
-2. Write E2E tests verifying all `/api/admin/*` endpoints strictly enforce `ADMIN` role (403 for user, 200 for admin).
-3. `AdminService` and `AdminController` (`/api/admin`):
-   - `GET /api/admin/dashboard`: Overall system statistics (total users, active subscriptions, total conversations, total API usage).
-   - `GET /api/admin/users`: List users with pagination and role/status filtering.
-   - `PATCH /api/admin/users/:id/status`: Activate or deactivate user accounts.
-   - `GET /api/admin/subscriptions`: Overview of subscriptions across tiers (FREE vs PREMIUM).
-   - `GET /api/admin/logs`: System API usage logs and audit trail.
-   - `GET /api/admin/health`: Comprehensive system health diagnostics.
+### Step 12: Admin Panel APIs & System Oversight (Phase 8 — TDD First)
+- **TDD Tests First**:
+  - Authored unit test suite `src/modules/admin/admin.service.spec.ts` (12 tests) verifying dashboard metrics aggregation, paginated user management with multi-field search and filters, user status toggling, admin self-deactivation protection (400), active session invalidation on deactivation, subscription tier breakdown, log filtering, and comprehensive system health diagnostics (healthy and failure modes).
+  - Authored E2E test suite `test/admin.e2e-spec.ts` (22 tests) validating strict RBAC enforcement (401 without Bearer token, 403 for standard `USER` role across all 6 admin routes), admin dashboard metrics (200), user pagination and role filtering (200), admin self-deactivation rejection (400), target user deactivation with session termination (200), user reactivation (200), subscription breakdown (200), logs retrieval (200), and diagnostics (200).
+- **Administrative Architecture**:
+  - Implemented `ApiUsageInterceptor` (`src/common/interceptors/api-usage.interceptor.ts`):
+    - Global NestJS interceptor wired via `APP_INTERCEPTOR`.
+    - Asynchronously records HTTP requests, response status codes, latencies, IP addresses, and user-agent strings to the PostgreSQL `api_usage_logs` table without blocking response delivery.
+  - Implemented `AdminService` (`src/modules/admin/admin.service.ts`):
+    - Aggregates multi-table metrics for users, subscriptions, conversations, messages, web searches, providers, and API requests.
+    - Manages user active status with immediate refresh token revocation on deactivation to terminate active sessions.
+    - System health diagnostics measuring PostgreSQL roundtrip ping latency via `$queryRaw`, process uptime, and V8 heap/RSS memory allocation.
+- **API Endpoints Implemented** (`/api/admin`):
+  - `GET /api/admin/dashboard`: System-wide statistics and usage metrics.
+  - `GET /api/admin/users`: Paginated user accounts with role, status, and search filters.
+  - `PATCH /api/admin/users/:id/status`: Activate or deactivate user accounts.
+  - `GET /api/admin/subscriptions`: Subscription breakdown across FREE and PREMIUM tiers.
+  - `GET /api/admin/logs`: Chronological API usage logs with multi-parameter filtering.
+  - `GET /api/admin/health`: Diagnostic health report with database latency and memory stats.
+- **System Verification**:
+  - Total automated test suite expanded to **159 passing tests (79 unit, 80 E2E)** across 20 test suites with 100% green pass rate.
+
+---
+
+## 🧭 Next Milestone: Phase 9 (Hardening Pass & Production Readiness)
+In Phase 9, we will implement:
+1. Standardized global error response verification with `AllExceptionsFilter`.
+2. Comprehensive `class-validator` DTO validation audits across every endpoint.
+3. Rate limiting with `@nestjs/throttler` (protecting auth and inference endpoints).
+4. HTTP security headers with `helmet` and production CORS configuration.
+5. Complete Swagger OpenAPI documentation annotations across all remaining routes.
+

@@ -14,6 +14,9 @@ import { CryptoModule } from './common/crypto/crypto.module';
 import { ProvidersModule } from './modules/providers/providers.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { WebSearchModule } from './modules/search/web-search.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ApiUsageInterceptor } from './common/interceptors/api-usage.interceptor';
 
 @Module({
   imports: [
@@ -80,9 +83,17 @@ import { WebSearchModule } from './modules/search/web-search.module';
     ProvidersModule,
     ChatModule,
     WebSearchModule,
+    AdminModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ApiUsageInterceptor,
+    },
+  ],
 })
 export class AppModule {}
+
 

@@ -144,16 +144,30 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 - [x] Registered `WebSearchModule` in `AppModule`.
 - [x] Full automated test suite passing: **125 tests total (67 unit, 58 E2E)**.
 
-### Phase 8: Admin Panel APIs (UPCOMING — TDD First)
-- [ ] Write Unit tests for `AdminService` dashboard metrics, user oversight, and logs filtering.
-- [ ] Write E2E tests verifying all `/api/admin/*` endpoints strictly enforce `ADMIN` role (403 for user, 200 for admin).
-- [ ] Implement `AdminService` and `AdminController` (`/api/admin`):
+### Phase 8: Admin Panel APIs (COMPLETED — Built TDD First)
+- [x] **TDD Unit Tests Written First**:
+  - `src/modules/admin/admin.service.spec.ts` (12 tests): dashboard metrics aggregation, paginated user listing with role/status/search filters, user activation toggle, self-deactivation prevention, session revocation on deactivation, subscription tier breakdown, log filtering, and system health diagnostics (healthy and failure modes).
+- [x] **TDD E2E Tests Written First**:
+  - `test/admin.e2e-spec.ts` (22 tests): unauthenticated access verification (401 across all 6 admin routes), non-admin forbidden verification (403 across all 6 routes), admin dashboard metrics (200), user list pagination and filtering (200), admin self-deactivation prevention (400), user account deactivation with session termination (200), user reactivation (200), subscriptions overview (200), logs retrieval (200), and comprehensive system diagnostics (200).
+- [x] Implemented `AdminDashboardResponseDto`, `AdminUsersQueryDto`, `AdminUsersListResponseDto`, `UpdateUserStatusDto`, `AdminSubscriptionsResponseDto`, `AdminLogsQueryDto`, `AdminLogsResponseDto`, and `AdminSystemHealthDto`.
+- [x] Implemented `ApiUsageInterceptor` (`src/common/interceptors/api-usage.interceptor.ts`) to asynchronously capture all API requests, response status codes, latencies, and client headers into the PostgreSQL `api_usage_logs` table.
+- [x] Implemented `AdminService` with database queries, metrics aggregation, user management, and health checks.
+- [x] Implemented `AdminController` (`/api/admin`):
   - `GET /api/admin/dashboard`: Overall system statistics (total users, active subscriptions, total conversations, total API usage).
   - `GET /api/admin/users`: List users with pagination and role/status filtering.
-  - `PATCH /api/admin/users/:id/status`: Activate or deactivate user accounts.
+  - `PATCH /api/admin/users/:id/status`: Activate or deactivate user accounts (with session revocation).
   - `GET /api/admin/subscriptions`: Overview of subscriptions across tiers (FREE vs PREMIUM).
   - `GET /api/admin/logs`: System API usage logs and audit trail.
   - `GET /api/admin/health`: Comprehensive system health diagnostics.
+- [x] Registered `AdminModule` in `AppModule` and configured `APP_INTERCEPTOR`.
+- [x] Full automated test suite passing: **159 tests total (79 unit, 80 E2E) across 20 test suites**.
+
+### Phase 9: Hardening Pass (UPCOMING)
+- [ ] Global exception filter audit & standardized error response schema.
+- [ ] Class-validator DTO verification on every endpoint.
+- [ ] Rate limiting (`@nestjs/throttler`) configuration.
+- [ ] Security headers (`helmet`) & strict CORS.
+- [ ] Swagger API documentation enrichment across all routes.
 
 ---
 
@@ -165,3 +179,4 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 | Review AES-256 Key Storage | Phase 5 | 🔍 Ready for Review | Verified PostgreSQL column `encrypted_api_key` stores ciphertext only |
 | Google Gemini API Key | Phase 6 | ⏳ Pending | Free tier API key needed for optional real live test (unit/e2e use mocks) |
 | OpenAI / Claude API Keys | Phase 5-6 | ⚪ Optional | Not required; unit/e2e tests use mocked HTTP adapters |
+
