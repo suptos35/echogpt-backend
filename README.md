@@ -130,7 +130,10 @@ npm run test:cov
 | **Chat** | `GET` | `/api/chat/conversations/:id` | Get full conversation thread with message history | JWT Bearer |
 | **Chat** | `DELETE`| `/api/chat/conversations/:id`| Cascade delete conversation thread and messages | JWT Bearer |
 | **Chat** | `POST` | `/api/chat/stream` | Stream AI completion in real-time via SSE | JWT Bearer |
-| **Search** | `POST` | `/api/search` | AI-assisted web search | JWT Bearer |
+| **Search** | `POST` | `/api/search` | Execute web search with in-memory TTL caching | JWT Bearer |
+| **Search** | `GET` | `/api/search/history` | Retrieve user web search history log | JWT Bearer |
+| **Search** | `GET` | `/api/search/recent` | Retrieve recent distinct search queries | JWT Bearer |
+| **Search** | `GET` | `/api/search/suggestions`| Autocomplete suggestions matching search prefix | JWT Bearer |
 | **Admin** | `GET` | `/api/admin/dashboard` | Dashboard metrics & system stats | Admin Bearer |
 
 *(Explore full schema and interactive test sandbox at `http://localhost:3000/api/docs`)*

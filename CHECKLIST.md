@@ -15,8 +15,8 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 | **Phase 4** | Subscription & Quota Management | ✅ **Completed** | Free (20/day) & Premium (500/day) plans, auto daily quota reset, upgrade/downgrade endpoints, quota decrementing, 429 enforcement |
 | **Phase 5** | AI Provider Management & Encryption | ✅ **Completed** | AES-256-CBC encrypted API key storage, random IVs, provider CRUD, default selection, health checks, key leakage prevention |
 | **Phase 6** | Chat API & Model Orchestration | ✅ **Completed** | Pluggable `AiProviderAdapter` (Gemini, OpenAI, Claude), conversation persistence, quota enforcement (429), SSE streaming |
-| **Phase 7** | Web Search API | ⏳ **Next** | AI-assisted search, caching layer, query history, suggestions |
-| **Phase 8** | Admin Panel APIs | ⏳ Upcoming | Analytics dashboard, user oversight, subscription management, request logs |
+| **Phase 7** | Web Search API | ✅ **Completed** | DuckDuckGo search integration, in-memory TTL caching layer (cache hit/miss), search history, recent queries, autocomplete suggestions |
+| **Phase 8** | Admin Panel APIs | ⏳ **Next** | Analytics dashboard, user oversight, subscription management, request logs |
 | **Phase 9** | Hardening & Security Pass | ⏳ Upcoming | Global exception filter, helmet, rate throttler, validation DTOs, full OpenAPI annotations |
 | **Phase 10** | Test Coverage & Postman Collection | ⏳ Upcoming | Unit + E2E coverage (75-85%), Postman export, GitHub Actions CI workflow |
 | **Phase 11** | Submission Polish & Clean Clone Test | ⏳ Upcoming | Final documentation verification, zero-config bootstrap verification |
@@ -127,18 +127,33 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
   - `DELETE /api/chat/conversations/:id`: Cascade-delete conversation thread.
   - `POST /api/chat/stream`: Real-time SSE token streaming endpoint.
 - [x] Registered `ChatModule` in `AppModule`.
-- [x] Full automated test suite passing: **104 tests total (56 unit, 48 E2E)**.
+### Phase 7: Web Search API (COMPLETED — Built TDD First)
+- [x] **TDD Unit Tests Written First**:
+  - `src/modules/search/services/search-cache.service.spec.ts` (5 tests): query normalization, cache set/get, cache miss handling, TTL expiration, and cache clear.
+  - `src/modules/search/web-search.service.spec.ts` (6 tests): search execution on cache miss, cached result return on cache hit, history log mapping, recent query deduplication, and prefix-based autocomplete suggestions.
+- [x] **TDD E2E Tests Written First**:
+  - `test/search.e2e-spec.ts` (10 tests): `POST /api/search` first query (`cached: false`), repeat identical query (`cached: true`), input validation (400 for empty query), unauthorized guards (401), search history listing, recent queries query, and suggestions endpoint.
+- [x] Implemented `SearchCacheService` (`src/modules/search/services/search-cache.service.ts`) with configurable 300s TTL and normalized lowercase keys.
+- [x] Implemented `SearchQueryDto`, `SearchResultItemDto`, `SearchResponseDto`, `SearchHistoryItemDto`, `RecentQueriesDto`, and `SearchSuggestionsDto`.
+- [x] Implemented `WebSearchService` integrating DuckDuckGo Instant Answer API, fallback web summaries, PostgreSQL persistence (`web_searches` table), and cache telemetry logging (`Cache HIT` vs `Cache MISS`).
+- [x] Implemented `WebSearchController` (`/api/search`):
+  - `POST /api/search`: Query search provider with automatic caching.
+  - `GET /api/search/history`: Retrieve user search history.
+  - `GET /api/search/recent`: Retrieve deduplicated list of recent search queries.
+  - `GET /api/search/suggestions`: Fast autocomplete suggestions for UI search bar.
+- [x] Registered `WebSearchModule` in `AppModule`.
+- [x] Full automated test suite passing: **125 tests total (67 unit, 58 E2E)**.
 
-### Phase 7: Web Search API (UPCOMING — TDD First)
-- [ ] Write Unit tests for search provider service and in-memory/cache hit-miss handling.
-- [ ] Write E2E tests for `POST /api/search`, query history, recent searches, and suggestion endpoints.
-- [ ] Implement search integration (DuckDuckGo Instant Answer / Brave Search API).
-- [ ] Implement query caching layer (CacheModule or Redis) to save latency and bandwidth.
-- [ ] Implement `WebSearchService` and `WebSearchController` (`/api/search`):
-  - `POST /api/search` (execute query, check cache, return sources/snippets)
-  - `GET /api/search/history` (user search history)
-  - `GET /api/search/recent` (recent distinct queries)
-  - `GET /api/search/suggestions` (autocomplete suggestions based on past queries)
+### Phase 8: Admin Panel APIs (UPCOMING — TDD First)
+- [ ] Write Unit tests for `AdminService` dashboard metrics, user oversight, and logs filtering.
+- [ ] Write E2E tests verifying all `/api/admin/*` endpoints strictly enforce `ADMIN` role (403 for user, 200 for admin).
+- [ ] Implement `AdminService` and `AdminController` (`/api/admin`):
+  - `GET /api/admin/dashboard`: Overall system statistics (total users, active subscriptions, total conversations, total API usage).
+  - `GET /api/admin/users`: List users with pagination and role/status filtering.
+  - `PATCH /api/admin/users/:id/status`: Activate or deactivate user accounts.
+  - `GET /api/admin/subscriptions`: Overview of subscriptions across tiers (FREE vs PREMIUM).
+  - `GET /api/admin/logs`: System API usage logs and audit trail.
+  - `GET /api/admin/health`: Comprehensive system health diagnostics.
 
 ---
 

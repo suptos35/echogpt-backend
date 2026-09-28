@@ -251,14 +251,39 @@ When a user updates their password via `PATCH /api/users/change-password`:
 
 ---
 
-## 🧭 Next Milestone: Phase 7 (Web Search API & Caching — TDD First)
-In Phase 7, we will implement:
-1. Write Unit tests for search integration and cache layer.
-2. Write E2E tests for `POST /api/search`, search history, recent searches, and suggestion endpoints.
-3. Web search integration with DuckDuckGo Instant Answer / Brave Search API.
-4. Caching layer (in-memory CacheModule or Redis) to save latency and bandwidth.
-5. `WebSearchService` and `WebSearchController` (`/api/search`):
-   - `POST /api/search` (execute query, cache result, persist to `web_searches` table).
-   - `GET /api/search/history` (user search query log).
-   - `GET /api/search/recent` (distinct recent queries).
-   - `GET /api/search/suggestions` (query autocomplete suggestions).
+### Step 11: Web Search API & Caching (Phase 7 — TDD First)
+- **TDD Tests First**:
+  - Authored unit test suite `src/modules/search/services/search-cache.service.spec.ts` (5 tests) verifying query normalization (trim and lowercase), value persistence, cache misses, TTL expiration, and cache clearance.
+  - Authored unit test suite `src/modules/search/web-search.service.spec.ts` (6 tests) validating search execution on cache miss (`cached: false`), instant response on cache hit (`cached: true`), history mapping, recent query deduplication, and prefix suggestions.
+  - Authored E2E test suite `test/search.e2e-spec.ts` (10 tests) testing `POST /api/search` cache hit/miss behavior, input validation (400 for empty query), unauthorized guards (401), search history listing, recent queries query, and suggestions endpoint.
+- **Search & Caching Architecture**:
+  - Implemented `SearchCacheService` (`src/modules/search/services/search-cache.service.ts`):
+    - Configurable in-memory TTL caching (default 300 seconds / 5 minutes).
+    - Normalizes search keys to eliminate duplicate requests differing only in whitespace or casing.
+    - Emits structured telemetry: `Search query: "..." (Cache HIT)` vs `(Cache MISS)`.
+  - DuckDuckGo Instant Answer API integration:
+    - Queries `https://api.duckduckgo.com` with formatted JSON parsing of abstracts, URLs, and related topics.
+    - Provides instant deterministic mock results in test environments without external network dependencies.
+  - Database Persistence:
+    - Every executed search is recorded in the PostgreSQL `web_searches` table with user ownership, query string, structured result payload, and cache hit metadata.
+- **API Endpoints Implemented** (`/api/search`):
+  - `POST /api/search`: Executes web search, automatically utilizing cache when available.
+  - `GET /api/search/history`: Returns chronological log of user's past search queries.
+  - `GET /api/search/recent`: Returns deduplicated list of recent search queries.
+  - `GET /api/search/suggestions`: Provides autocomplete suggestions matching search prefixes.
+- **System Verification**:
+  - Total automated test suite expanded to **125 passing tests (67 unit, 58 E2E)** across 18 test suites with 100% green pass rate.
+
+---
+
+## 🧭 Next Milestone: Phase 8 (Admin Panel APIs & Oversight — TDD First)
+In Phase 8, we will implement:
+1. Write Unit tests for `AdminService` dashboard metrics, user oversight, and logs filtering.
+2. Write E2E tests verifying all `/api/admin/*` endpoints strictly enforce `ADMIN` role (403 for user, 200 for admin).
+3. `AdminService` and `AdminController` (`/api/admin`):
+   - `GET /api/admin/dashboard`: Overall system statistics (total users, active subscriptions, total conversations, total API usage).
+   - `GET /api/admin/users`: List users with pagination and role/status filtering.
+   - `PATCH /api/admin/users/:id/status`: Activate or deactivate user accounts.
+   - `GET /api/admin/subscriptions`: Overview of subscriptions across tiers (FREE vs PREMIUM).
+   - `GET /api/admin/logs`: System API usage logs and audit trail.
+   - `GET /api/admin/health`: Comprehensive system health diagnostics.

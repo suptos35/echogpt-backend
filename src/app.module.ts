@@ -13,6 +13,7 @@ import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { CryptoModule } from './common/crypto/crypto.module';
 import { ProvidersModule } from './modules/providers/providers.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { WebSearchModule } from './modules/search/web-search.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { ChatModule } from './modules/chat/chat.module';
     CryptoModule,
     ProvidersModule,
     ChatModule,
+    WebSearchModule,
   ],
   controllers: [AppController],
   providers: [AppService],
