@@ -36,7 +36,8 @@ export class ProvidersController {
   @Get()
   @ApiOperation({
     summary: 'List available AI providers',
-    description: 'Retrieves all configured AI providers with model listings. API keys are strictly redacted.',
+    description:
+      'Retrieves all configured AI providers with model listings. API keys are strictly redacted.',
   })
   @ApiResponse({
     status: 200,
@@ -51,7 +52,8 @@ export class ProvidersController {
   @Get(':id')
   @ApiOperation({
     summary: 'Get AI provider details by ID',
-    description: 'Retrieves specific AI provider configuration (keys sanitized)',
+    description:
+      'Retrieves specific AI provider configuration (keys sanitized)',
   })
   @ApiParam({ name: 'id', description: 'Provider UUID' })
   @ApiResponse({
@@ -70,7 +72,8 @@ export class ProvidersController {
   @Roles(RoleName.ADMIN)
   @ApiOperation({
     summary: 'Create new AI provider (Admin only)',
-    description: 'Registers a new AI provider. Any API key provided will be encrypted using AES-256 before storage.',
+    description:
+      'Registers a new AI provider. Any API key provided will be encrypted using AES-256 before storage.',
   })
   @ApiResponse({
     status: 201,
@@ -79,7 +82,10 @@ export class ProvidersController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires ADMIN role' })
-  @ApiResponse({ status: 409, description: 'Provider with this name already exists' })
+  @ApiResponse({
+    status: 409,
+    description: 'Provider with this name already exists',
+  })
   async create(@Body() dto: CreateProviderDto): Promise<ProviderResponseDto> {
     return this.providersService.createProvider(dto);
   }
@@ -113,7 +119,8 @@ export class ProvidersController {
   @Roles(RoleName.ADMIN)
   @ApiOperation({
     summary: 'Set default AI provider (Admin only)',
-    description: 'Sets the specified provider as global system default and unsets all others.',
+    description:
+      'Sets the specified provider as global system default and unsets all others.',
   })
   @ApiParam({ name: 'id', description: 'Provider UUID' })
   @ApiResponse({

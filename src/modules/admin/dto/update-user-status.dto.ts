@@ -4,7 +4,8 @@ import { IsBoolean } from 'class-validator';
 export class UpdateUserStatusDto {
   @ApiProperty({
     example: false,
-    description: 'Whether the user account is active. If false, active sessions are immediately revoked.',
+    description:
+      'Whether the user account is active. If false, active sessions are immediately revoked.',
   })
   @IsBoolean()
   isActive: boolean;
@@ -20,6 +21,8 @@ export class AdminUserStatusResponseDto {
   @ApiProperty({ example: false })
   isActive: boolean;
 
-  @ApiProperty({ example: 'User account has been deactivated and active sessions revoked' })
+  @ApiProperty({
+    example: 'User account has been deactivated and active sessions revoked',
+  })
   message: string;
 }

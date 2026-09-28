@@ -11,7 +11,10 @@ export class ProviderResponseDto {
   @ApiProperty({ example: 'Google Gemini (Free Tier Default)' })
   displayName: string;
 
-  @ApiPropertyOptional({ example: 'https://generativelanguage.googleapis.com', nullable: true })
+  @ApiPropertyOptional({
+    example: 'https://generativelanguage.googleapis.com',
+    nullable: true,
+  })
   baseUrl: string | null;
 
   @ApiProperty({ example: true })
@@ -30,7 +33,8 @@ export class ProviderResponseDto {
   availableModels: string[];
 
   @ApiProperty({
-    description: 'Indicates whether an encrypted API key is currently configured for this provider',
+    description:
+      'Indicates whether an encrypted API key is currently configured for this provider',
     example: true,
   })
   hasApiKey: boolean;

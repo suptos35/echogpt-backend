@@ -2,7 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SearchCacheService } from './services/search-cache.service';
 import { SearchQueryDto } from './dto/search-query.dto';
-import { SearchResponseDto, SearchResultItemDto } from './dto/search-response.dto';
+import {
+  SearchResponseDto,
+  SearchResultItemDto,
+} from './dto/search-response.dto';
 import {
   SearchHistoryItemDto,
   RecentQueriesDto,
@@ -21,7 +24,10 @@ export class WebSearchService {
   /**
    * Execute web search: checks in-memory cache, queries search provider, and logs request
    */
-  async search(userId: string, dto: SearchQueryDto): Promise<SearchResponseDto> {
+  async search(
+    userId: string,
+    dto: SearchQueryDto,
+  ): Promise<SearchResponseDto> {
     const cachedResults = this.cache.get<SearchResultItemDto[]>(dto.query);
     let results: SearchResultItemDto[];
     let cached = false;
@@ -29,10 +35,14 @@ export class WebSearchService {
     if (cachedResults) {
       cached = true;
       results = cachedResults;
-      this.logger.log(`Search query: "${dto.query}" (Cache HIT) for userId=${userId}`);
+      this.logger.log(
+        `Search query: "${dto.query}" (Cache HIT) for userId=${userId}`,
+      );
     } else {
       cached = false;
-      this.logger.log(`Search query: "${dto.query}" (Cache MISS) for userId=${userId}`);
+      this.logger.log(
+        `Search query: "${dto.query}" (Cache MISS) for userId=${userId}`,
+      );
       results = await this.executeProviderSearch(dto.query, dto.limit || 5);
       // Cache results for 5 minutes (300 seconds)
       this.cache.set(dto.query, results, 300);
@@ -68,7 +78,9 @@ export class WebSearchService {
     });
 
     return history.map((item) => {
-      const resultsArray = Array.isArray(item.results) ? (item.results as any[]) : [];
+      const resultsArray = Array.isArray(item.results)
+        ? (item.results as any[])
+        : [];
       return {
         id: item.id,
         query: item.query,
@@ -108,7 +120,10 @@ export class WebSearchService {
   /**
    * Query autocomplete suggestions based on historical user queries and common topics
    */
-  async getSuggestions(userId: string, prefix?: string): Promise<SearchSuggestionsDto> {
+  async getSuggestions(
+    userId: string,
+    prefix?: string,
+  ): Promise<SearchSuggestionsDto> {
     if (!prefix || prefix.trim().length === 0) {
       return { suggestions: [] };
     }
@@ -188,7 +203,9 @@ export class WebSearchService {
 
     try {
       const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
-      const response = await fetch(url, { headers: { 'User-Agent': 'EchoGPT-Backend/1.0' } });
+      const response = await fetch(url, {
+        headers: { 'User-Agent': 'EchoGPT-Backend/1.0' },
+      });
 
       if (!response.ok) {
         throw new Error(`DuckDuckGo API returned ${response.status}`);
@@ -230,7 +247,9 @@ export class WebSearchService {
 
       return results.slice(0, limit);
     } catch (err: any) {
-      this.logger.warn(`Search provider error: ${err.message}. Using fallback summary.`);
+      this.logger.warn(
+        `Search provider error: ${err.message}. Using fallback summary.`,
+      );
       return [
         {
           title: `${query} - Web Search`,

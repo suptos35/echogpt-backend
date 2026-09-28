@@ -39,16 +39,23 @@ export class ChatController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Send prompt to AI model',
-    description: 'Routes prompt through selected or default AI provider, decrements daily subscription quota, and records message history.',
+    description:
+      'Routes prompt through selected or default AI provider, decrements daily subscription quota, and records message history.',
   })
   @ApiResponse({
     status: 200,
     description: 'AI model completion response and token usage metrics',
     type: SendPromptResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Invalid prompt payload or disabled provider' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid prompt payload or disabled provider',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 429, description: 'Too Many Requests — Daily subscription quota exhausted' })
+  @ApiResponse({
+    status: 429,
+    description: 'Too Many Requests — Daily subscription quota exhausted',
+  })
   async sendPrompt(
     @CurrentUser('userId') userId: string,
     @Body() dto: SendPromptDto,
@@ -59,7 +66,8 @@ export class ChatController {
   @Get('conversations')
   @ApiOperation({
     summary: 'List user conversations',
-    description: 'Retrieves all conversation threads for the authenticated user, ordered by most recent activity.',
+    description:
+      'Retrieves all conversation threads for the authenticated user, ordered by most recent activity.',
   })
   @ApiResponse({
     status: 200,
@@ -76,7 +84,8 @@ export class ChatController {
   @Get('conversations/:id')
   @ApiOperation({
     summary: 'Get conversation details and messages',
-    description: 'Retrieves a full conversation thread including ordered user and assistant messages.',
+    description:
+      'Retrieves a full conversation thread including ordered user and assistant messages.',
   })
   @ApiParam({ name: 'id', description: 'Conversation UUID' })
   @ApiResponse({
@@ -96,10 +105,14 @@ export class ChatController {
   @Delete('conversations/:id')
   @ApiOperation({
     summary: 'Delete conversation thread',
-    description: 'Deletes the conversation and cascades deletion to all contained messages.',
+    description:
+      'Deletes the conversation and cascades deletion to all contained messages.',
   })
   @ApiParam({ name: 'id', description: 'Conversation UUID' })
-  @ApiResponse({ status: 200, description: 'Conversation deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Conversation deleted successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Conversation not found' })
   async deleteConversation(
@@ -112,9 +125,13 @@ export class ChatController {
   @Post('stream')
   @ApiOperation({
     summary: 'Stream AI completion (SSE)',
-    description: 'Streams the AI response tokens in real-time using Server-Sent Events (SSE).',
+    description:
+      'Streams the AI response tokens in real-time using Server-Sent Events (SSE).',
   })
-  @ApiResponse({ status: 200, description: 'text/event-stream stream of response tokens' })
+  @ApiResponse({
+    status: 200,
+    description: 'text/event-stream stream of response tokens',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 429, description: 'Quota exhausted' })
   async streamPrompt(

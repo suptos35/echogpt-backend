@@ -20,7 +20,11 @@ describe('WebSearchService (Unit Tests)', () => {
   beforeEach(async () => {
     prisma = {
       webSearch: {
-        create: jest.fn().mockImplementation((args) => Promise.resolve({ id: 'search-1', ...args.data })),
+        create: jest
+          .fn()
+          .mockImplementation((args) =>
+            Promise.resolve({ id: 'search-1', ...args.data }),
+          ),
         findMany: jest.fn(),
       },
     };
@@ -44,7 +48,9 @@ describe('WebSearchService (Unit Tests)', () => {
 
   describe('search', () => {
     it('should perform search, cache results, and mark cached=false on cache miss', async () => {
-      const response = await service.search('user-1', { query: 'TypeScript documentation' });
+      const response = await service.search('user-1', {
+        query: 'TypeScript documentation',
+      });
 
       expect(response).toBeDefined();
       expect(response.query).toBe('TypeScript documentation');
@@ -67,7 +73,9 @@ describe('WebSearchService (Unit Tests)', () => {
     it('should return cached results and mark cached=true on cache hit', async () => {
       cache.set('typescript documentation', mockSearchResult);
 
-      const response = await service.search('user-1', { query: 'TypeScript documentation' });
+      const response = await service.search('user-1', {
+        query: 'TypeScript documentation',
+      });
 
       expect(response.cached).toBe(true);
       expect(response.results).toEqual(mockSearchResult);
@@ -126,8 +134,12 @@ describe('WebSearchService (Unit Tests)', () => {
 
       const suggestions = await service.getSuggestions('user-1', 'type');
 
-      expect(suggestions.suggestions.some((s) => s.includes('typescript'))).toBe(true);
-      expect(suggestions.suggestions.some((s) => s.includes('nest'))).toBe(false);
+      expect(
+        suggestions.suggestions.some((s) => s.includes('typescript')),
+      ).toBe(true);
+      expect(suggestions.suggestions.some((s) => s.includes('nest'))).toBe(
+        false,
+      );
     });
   });
 });

@@ -7,7 +7,10 @@ import {
 } from '@nestjs/common';
 import { PlanType, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
-import { SubscriptionStatusDto, RemainingRequestsDto } from './dto/subscription-status.dto';
+import {
+  SubscriptionStatusDto,
+  RemainingRequestsDto,
+} from './dto/subscription-status.dto';
 
 @Injectable()
 export class SubscriptionService {
@@ -47,7 +50,9 @@ export class SubscriptionService {
           startDate: new Date(),
         },
       });
-      this.logger.log(`Initialized default FREE subscription for user: ${userId}`);
+      this.logger.log(
+        `Initialized default FREE subscription for user: ${userId}`,
+      );
     }
 
     // Check if daily quota needs to be reset
@@ -157,7 +162,9 @@ export class SubscriptionService {
   /**
    * Decrement quota for a requested operation; enforces rate limit (429) if quota is exhausted
    */
-  async consumeQuota(userId: string): Promise<{ allowed: boolean; remainingRequests: number }> {
+  async consumeQuota(
+    userId: string,
+  ): Promise<{ allowed: boolean; remainingRequests: number }> {
     const status = await this.getSubscriptionStatus(userId);
 
     if (status.usedRequestsToday >= status.maxRequestsPerDay) {
@@ -177,7 +184,10 @@ export class SubscriptionService {
       },
     });
 
-    const remaining = Math.max(0, updated.maxRequestsPerDay - updated.usedRequestsToday);
+    const remaining = Math.max(
+      0,
+      updated.maxRequestsPerDay - updated.usedRequestsToday,
+    );
     return {
       allowed: true,
       remainingRequests: remaining,
@@ -204,7 +214,9 @@ export class SubscriptionService {
           lastResetDate: now,
         },
       });
-      this.logger.log(`Daily quota automatically reset to 0 for userId: ${subscription.userId}`);
+      this.logger.log(
+        `Daily quota automatically reset to 0 for userId: ${subscription.userId}`,
+      );
       return reset;
     }
 

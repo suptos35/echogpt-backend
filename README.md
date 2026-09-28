@@ -88,20 +88,47 @@ The seed script (`npm run seed`) automatically prepares initial test accounts:
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & Quality Assurance
+
+Our test suite employs **TDD First** methodology, combining exhaustive unit testing with end-to-end integration tests:
 
 ```bash
-# Run unit tests
+# Run all unit tests (19 test suites, 124 tests)
 npm test
 
-# Run e2e tests
+# Run all E2E integration tests (9 test suites, 90 tests)
 npm run test:e2e
 
-# Run test coverage
+# Run test coverage analysis (Target: 70–85%)
 npm run test:cov
+
+# Run linter
+npm run lint
 ```
 
+### Coverage Highlights (`npm run test:cov`)
+- **Total Automated Tests:** 214 tests passing across 28 test suites (100% green)
+- **Statement Coverage:** 74.15%
+- **Line Coverage:** 73.23%
+- **Function Coverage:** 83.94%
+
 ---
+
+## 📬 Postman Collection & Environment
+
+A complete Postman test suite is provided in the [`postman/`](file:///mnt/sda3/projects/Appifydevs/postman/) directory:
+
+1. **Import Files into Postman:**
+   - [EchoGPT_Backend.postman_collection.json](file:///mnt/sda3/projects/Appifydevs/postman/EchoGPT_Backend.postman_collection.json) (30+ requests covering all 8 modules)
+   - [EchoGPT_Local.postman_environment.json](file:///mnt/sda3/projects/Appifydevs/postman/EchoGPT_Local.postman_environment.json) (Pre-configured `baseUrl`, credentials, and token variables)
+
+2. **Automated Token Management:**
+   - Logging in via `02 - Authentication > Login User` automatically extracts `accessToken` and `refreshToken` and saves them to your Postman environment.
+   - Logging in via `02 - Authentication > Login Admin` automatically extracts and sets `adminToken`.
+   - All subsequent requests automatically inherit credentials without manual copy-pasting.
+
+---
+
 
 ## 📚 API Endpoints Summary
 

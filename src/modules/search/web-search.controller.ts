@@ -37,7 +37,8 @@ export class WebSearchController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Execute web search query',
-    description: 'Searches the web via DuckDuckGo Instant Answer API with in-memory caching to reduce latency.',
+    description:
+      'Searches the web via DuckDuckGo Instant Answer API with in-memory caching to reduce latency.',
   })
   @ApiResponse({
     status: 200,
@@ -56,7 +57,8 @@ export class WebSearchController {
   @Get('history')
   @ApiOperation({
     summary: 'Get search history',
-    description: 'Retrieves the current user’s chronological web search history.',
+    description:
+      'Retrieves the current user’s chronological web search history.',
   })
   @ApiResponse({
     status: 200,
@@ -73,7 +75,8 @@ export class WebSearchController {
   @Get('recent')
   @ApiOperation({
     summary: 'Get recent distinct search queries',
-    description: 'Returns the user’s most recent distinct search topics for quick re-execution.',
+    description:
+      'Returns the user’s most recent distinct search topics for quick re-execution.',
   })
   @ApiResponse({
     status: 200,
@@ -90,7 +93,8 @@ export class WebSearchController {
   @Get('suggestions')
   @ApiOperation({
     summary: 'Get search autocomplete suggestions',
-    description: 'Returns query suggestions based on search query prefix and user history.',
+    description:
+      'Returns query suggestions based on search query prefix and user history.',
   })
   @ApiQuery({
     name: 'q',

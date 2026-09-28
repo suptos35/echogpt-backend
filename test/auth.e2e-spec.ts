@@ -122,9 +122,7 @@ describe('Auth Flow (e2e)', () => {
 
   describe('POST /api/auth/logout', () => {
     it('should reject logout without JWT Bearer header', () => {
-      return request(app.getHttpServer())
-        .post('/api/auth/logout')
-        .expect(401);
+      return request(app.getHttpServer()).post('/api/auth/logout').expect(401);
     });
 
     it('should successfully log out with valid Bearer token', async () => {

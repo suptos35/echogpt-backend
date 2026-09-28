@@ -35,7 +35,11 @@ export class SearchCacheService {
   /**
    * Store value in cache with specified TTL in seconds
    */
-  set<T = any>(query: string, value: T, ttlSeconds: number = this.defaultTtlSeconds): void {
+  set<T = any>(
+    query: string,
+    value: T,
+    ttlSeconds: number = this.defaultTtlSeconds,
+  ): void {
     const key = this.normalizeKey(query);
     const expiresAt = Date.now() + ttlSeconds * 1000;
 

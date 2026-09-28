@@ -34,20 +34,35 @@ export class UsersController {
   @Get('profile')
   @ApiOperation({
     summary: 'Get current user profile',
-    description: 'Retrieves the authenticated user details along with their current subscription status.',
+    description:
+      'Retrieves the authenticated user details along with their current subscription status.',
   })
-  @ApiResponse({ status: 200, description: 'User profile retrieved successfully', type: UserProfileDto })
-  @ApiResponse({ status: 401, description: 'Unauthorized — valid access token required' })
-  async getProfile(@CurrentUser('userId') userId: string): Promise<UserProfileDto> {
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+    type: UserProfileDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized — valid access token required',
+  })
+  async getProfile(
+    @CurrentUser('userId') userId: string,
+  ): Promise<UserProfileDto> {
     return this.usersService.getProfile(userId);
   }
 
   @Patch('profile')
   @ApiOperation({
     summary: 'Update user profile',
-    description: 'Updates personal details (first name, last name) for the authenticated user.',
+    description:
+      'Updates personal details (first name, last name) for the authenticated user.',
   })
-  @ApiResponse({ status: 200, description: 'Profile updated successfully', type: UserProfileDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Profile updated successfully',
+    type: UserProfileDto,
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   async updateProfile(
     @CurrentUser('userId') userId: string,
@@ -60,10 +75,14 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Change password',
-    description: 'Validates current password, updates to a new password, and invalidates all existing refresh tokens.',
+    description:
+      'Validates current password, updates to a new password, and invalidates all existing refresh tokens.',
   })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  @ApiResponse({ status: 400, description: 'New password cannot be identical to current password' })
+  @ApiResponse({
+    status: 400,
+    description: 'New password cannot be identical to current password',
+  })
   @ApiResponse({ status: 401, description: 'Current password does not match' })
   async changePassword(
     @CurrentUser('userId') userId: string,
@@ -76,11 +95,14 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Delete / deactivate user account',
-    description: 'Deactivates the user account and revokes all active authentication tokens.',
+    description:
+      'Deactivates the user account and revokes all active authentication tokens.',
   })
   @ApiResponse({ status: 200, description: 'Account deactivated successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async deleteAccount(@CurrentUser('userId') userId: string): Promise<{ success: boolean; message: string }> {
+  async deleteAccount(
+    @CurrentUser('userId') userId: string,
+  ): Promise<{ success: boolean; message: string }> {
     return this.usersService.deleteAccount(userId);
   }
 
@@ -89,7 +111,8 @@ export class UsersController {
   @Roles(RoleName.ADMIN)
   @ApiOperation({
     summary: 'RBAC verification test route (Admin only)',
-    description: 'Verifies that only users with the ADMIN role can access this endpoint. Standard users receive 403 Forbidden.',
+    description:
+      'Verifies that only users with the ADMIN role can access this endpoint. Standard users receive 403 Forbidden.',
   })
   @ApiResponse({ status: 200, description: 'Admin access granted' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires ADMIN role' })

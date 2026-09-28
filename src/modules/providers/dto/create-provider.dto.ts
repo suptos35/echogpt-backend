@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsBoolean,
   IsArray,
-  IsUrl,
 } from 'class-validator';
 import { ProviderType } from '@prisma/client';
 
@@ -36,7 +35,8 @@ export class CreateProviderDto {
   baseUrl?: string;
 
   @ApiPropertyOptional({
-    description: 'Raw API key — will be encrypted with AES-256 before database persistence',
+    description:
+      'Raw API key — will be encrypted with AES-256 before database persistence',
     example: 'sk-proj-example-secret-key',
   })
   @IsOptional()

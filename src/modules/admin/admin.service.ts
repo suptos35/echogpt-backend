@@ -9,7 +9,10 @@ import { PrismaService } from '../../common/prisma/prisma.service';
 import { AdminDashboardResponseDto } from './dto/admin-dashboard.dto';
 import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import { AdminUsersListResponseDto } from './dto/admin-user-item.dto';
-import { UpdateUserStatusDto, AdminUserStatusResponseDto } from './dto/update-user-status.dto';
+import {
+  UpdateUserStatusDto,
+  AdminUserStatusResponseDto,
+} from './dto/update-user-status.dto';
 import { AdminSubscriptionsResponseDto } from './dto/admin-subscriptions.dto';
 import { AdminLogsQueryDto } from './dto/admin-logs-query.dto';
 import { AdminLogsResponseDto } from './dto/admin-logs-response.dto';
@@ -55,7 +58,9 @@ export class AdminService {
       this.prisma.subscription.count(),
       this.prisma.subscription.count({ where: { planType: PlanType.FREE } }),
       this.prisma.subscription.count({ where: { planType: PlanType.PREMIUM } }),
-      this.prisma.subscription.count({ where: { status: SubscriptionStatus.ACTIVE } }),
+      this.prisma.subscription.count({
+        where: { status: SubscriptionStatus.ACTIVE },
+      }),
       this.prisma.conversation.count(),
       this.prisma.message.count(),
       this.prisma.webSearch.count(),
@@ -64,7 +69,9 @@ export class AdminService {
       this.prisma.aiProvider.count({ where: { isEnabled: true } }),
       this.prisma.aiProvider.findFirst({ where: { isDefault: true } }),
       this.prisma.apiUsageLog.count(),
-      this.prisma.apiUsageLog.count({ where: { createdAt: { gte: startOfToday } } }),
+      this.prisma.apiUsageLog.count({
+        where: { createdAt: { gte: startOfToday } },
+      }),
       this.prisma.apiUsageLog.aggregate({ _avg: { latencyMs: true } }),
     ]);
 
@@ -92,7 +99,8 @@ export class AdminService {
       providers: {
         total: totalProviders,
         active: activeProviders,
-        defaultProvider: defaultProvider?.displayName || defaultProvider?.name || null,
+        defaultProvider:
+          defaultProvider?.displayName || defaultProvider?.name || null,
       },
       apiUsage: {
         totalRequests: totalLogs,
@@ -105,7 +113,9 @@ export class AdminService {
   /**
    * Paginated user list with role and status filters
    */
-  async getUsers(query: AdminUsersQueryDto): Promise<AdminUsersListResponseDto> {
+  async getUsers(
+    query: AdminUsersQueryDto,
+  ): Promise<AdminUsersListResponseDto> {
     const page = Math.max(1, query.page || 1);
     const limit = Math.min(100, Math.max(1, query.limit || 10));
     const skip = (page - 1) * limit;
@@ -180,7 +190,9 @@ export class AdminService {
     dto: UpdateUserStatusDto,
   ): Promise<AdminUserStatusResponseDto> {
     if (adminUserId === targetUserId && !dto.isActive) {
-      throw new BadRequestException('Cannot deactivate your own administrator account');
+      throw new BadRequestException(
+        'Cannot deactivate your own administrator account',
+      );
     }
 
     const user = await this.prisma.user.findUnique({
@@ -201,9 +213,13 @@ export class AdminService {
         where: { userId: targetUserId, isRevoked: false },
         data: { isRevoked: true },
       });
-      this.logger.warn(`Admin ${adminUserId} deactivated user account ${targetUserId} and revoked sessions`);
+      this.logger.warn(
+        `Admin ${adminUserId} deactivated user account ${targetUserId} and revoked sessions`,
+      );
     } else {
-      this.logger.log(`Admin ${adminUserId} activated user account ${targetUserId}`);
+      this.logger.log(
+        `Admin ${adminUserId} activated user account ${targetUserId}`,
+      );
     }
 
     return {
@@ -220,29 +236,30 @@ export class AdminService {
    * Subscriptions overview and breakdown by plan and status
    */
   async getSubscriptionsOverview(): Promise<AdminSubscriptionsResponseDto> {
-    const [
-      total,
-      free,
-      premium,
-      active,
-      cancelled,
-      expired,
-      subscriptions,
-    ] = await Promise.all([
-      this.prisma.subscription.count(),
-      this.prisma.subscription.count({ where: { planType: PlanType.FREE } }),
-      this.prisma.subscription.count({ where: { planType: PlanType.PREMIUM } }),
-      this.prisma.subscription.count({ where: { status: SubscriptionStatus.ACTIVE } }),
-      this.prisma.subscription.count({ where: { status: SubscriptionStatus.CANCELLED } }),
-      this.prisma.subscription.count({ where: { status: SubscriptionStatus.EXPIRED } }),
-      this.prisma.subscription.findMany({
-        take: 50,
-        include: {
-          user: true,
-        },
-        orderBy: { updatedAt: 'desc' },
-      }),
-    ]);
+    const [total, free, premium, active, cancelled, expired, subscriptions] =
+      await Promise.all([
+        this.prisma.subscription.count(),
+        this.prisma.subscription.count({ where: { planType: PlanType.FREE } }),
+        this.prisma.subscription.count({
+          where: { planType: PlanType.PREMIUM },
+        }),
+        this.prisma.subscription.count({
+          where: { status: SubscriptionStatus.ACTIVE },
+        }),
+        this.prisma.subscription.count({
+          where: { status: SubscriptionStatus.CANCELLED },
+        }),
+        this.prisma.subscription.count({
+          where: { status: SubscriptionStatus.EXPIRED },
+        }),
+        this.prisma.subscription.findMany({
+          take: 50,
+          include: {
+            user: true,
+          },
+          orderBy: { updatedAt: 'desc' },
+        }),
+      ]);
 
     return {
       summary: {
@@ -257,7 +274,9 @@ export class AdminService {
         id: sub.id,
         userId: sub.userId,
         userEmail: sub.user?.email || 'Unknown',
-        userName: [sub.user?.firstName, sub.user?.lastName].filter(Boolean).join(' ') || 'N/A',
+        userName:
+          [sub.user?.firstName, sub.user?.lastName].filter(Boolean).join(' ') ||
+          'N/A',
         planType: sub.planType,
         status: sub.status,
         maxRequestsPerDay: sub.maxRequestsPerDay,
@@ -271,7 +290,9 @@ export class AdminService {
   /**
    * Paginated API usage logs for auditing and monitoring
    */
-  async getApiUsageLogs(query: AdminLogsQueryDto): Promise<AdminLogsResponseDto> {
+  async getApiUsageLogs(
+    query: AdminLogsQueryDto,
+  ): Promise<AdminLogsResponseDto> {
     const page = Math.max(1, query.page || 1);
     const limit = Math.min(100, Math.max(1, query.limit || 20));
     const skip = (page - 1) * limit;

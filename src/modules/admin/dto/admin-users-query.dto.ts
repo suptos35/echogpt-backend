@@ -1,5 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsInt, Min, Max, IsEnum, IsBoolean, IsString } from 'class-validator';
+import {
+  IsOptional,
+  IsInt,
+  Min,
+  Max,
+  IsEnum,
+  IsBoolean,
+  IsString,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { RoleName } from '@prisma/client';
 
@@ -11,7 +19,11 @@ export class AdminUsersQueryDto {
   @Min(1)
   page?: number = 1;
 
-  @ApiPropertyOptional({ example: 10, default: 10, description: 'Items per page (max 100)' })
+  @ApiPropertyOptional({
+    example: 10,
+    default: 10,
+    description: 'Items per page (max 100)',
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -24,7 +36,10 @@ export class AdminUsersQueryDto {
   @IsEnum(RoleName)
   role?: RoleName;
 
-  @ApiPropertyOptional({ example: true, description: 'Filter by active/inactive status' })
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Filter by active/inactive status',
+  })
   @IsOptional()
   @Transform(({ value }) => {
     if (value === 'true' || value === true) return true;
@@ -34,7 +49,10 @@ export class AdminUsersQueryDto {
   @IsBoolean()
   isActive?: boolean;
 
-  @ApiPropertyOptional({ example: 'alice', description: 'Search term for email or name' })
+  @ApiPropertyOptional({
+    example: 'alice',
+    description: 'Search term for email or name',
+  })
   @IsOptional()
   @IsString()
   search?: string;

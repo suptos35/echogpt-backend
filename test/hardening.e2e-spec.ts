@@ -41,7 +41,12 @@ describe('Hardening, Security & Error Handling (e2e)', () => {
     app.enableCors({
       origin: '*',
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID', 'Accept'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Request-ID',
+        'Accept',
+      ],
       credentials: true,
     });
 
@@ -131,7 +136,9 @@ describe('Hardening, Security & Error Handling (e2e)', () => {
       expect(res.body).toHaveProperty('requestId');
       expect(res.body).toHaveProperty('error', 'Bad Request');
       expect(Array.isArray(res.body.message)).toBe(true);
-      expect(res.body.message.some((m: string) => m.includes('email'))).toBe(true);
+      expect(res.body.message.some((m: string) => m.includes('email'))).toBe(
+        true,
+      );
     });
 
     it('should reject unwhitelisted fields with 400 Bad Request', async () => {
@@ -147,7 +154,9 @@ describe('Hardening, Security & Error Handling (e2e)', () => {
       expect(res.body).toHaveProperty('statusCode', 400);
       expect(res.body).toHaveProperty('requestId');
       expect(Array.isArray(res.body.message)).toBe(true);
-      expect(res.body.message.some((m: string) => m.includes('should not exist'))).toBe(true);
+      expect(
+        res.body.message.some((m: string) => m.includes('should not exist')),
+      ).toBe(true);
     });
 
     it('should return uniform error format for 404 Not Found route', async () => {
@@ -207,8 +216,14 @@ describe('Hardening, Security & Error Handling (e2e)', () => {
 
       // Verify JWT Bearer auth security scheme is documented
       expect(res.body.components.securitySchemes).toHaveProperty('JWT-auth');
-      expect(res.body.components.securitySchemes['JWT-auth']).toHaveProperty('type', 'http');
-      expect(res.body.components.securitySchemes['JWT-auth']).toHaveProperty('scheme', 'bearer');
+      expect(res.body.components.securitySchemes['JWT-auth']).toHaveProperty(
+        'type',
+        'http',
+      );
+      expect(res.body.components.securitySchemes['JWT-auth']).toHaveProperty(
+        'scheme',
+        'bearer',
+      );
     });
   });
 

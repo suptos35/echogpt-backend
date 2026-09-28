@@ -171,10 +171,32 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 - [x] Enforced strict validation with global `ValidationPipe` (`whitelist: true`, `transform: true`, `forbidNonWhitelisted: true`, `stopAtFirstError: false`).
 - [x] Full automated test suite passing: **169 tests total (79 unit, 90 E2E) across 21 test suites**.
 
-### Phase 10: Test Coverage & Postman Collection (UPCOMING)
-- [ ] Measure and optimize test coverage with `npm run test:cov` (target 70-85%).
-- [ ] Generate comprehensive Postman collection with environment variables and sample requests.
-- [ ] Add GitHub Actions CI workflow (`.github/workflows/ci.yml`) running lint and automated tests.
+### Phase 10: Test Coverage & Postman Collection (COMPLETED — Built TDD First)
+- [x] **Test Coverage Measurement & Optimization**:
+  - Achieved **74.15% Statement Coverage**, **73.23% Line Coverage**, and **83.94% Function Coverage** via Jest coverage runner (`npm run test:cov`), squarely within the 70–85% target range.
+  - Implemented unit test suites for all 7 application controllers:
+    - `src/modules/auth/auth.controller.spec.ts`
+    - `src/modules/users/users.controller.spec.ts`
+    - `src/modules/subscription/subscription.controller.spec.ts`
+    - `src/modules/providers/providers.controller.spec.ts`
+    - `src/modules/chat/chat.controller.spec.ts`
+    - `src/modules/search/web-search.controller.spec.ts`
+    - `src/modules/admin/admin.controller.spec.ts`
+  - Expanded unit test coverage in `auth.service.spec.ts` for refresh token rotation, replay attack revocation, and inactive user refresh attempts.
+- [x] **Postman Collection & Environment**:
+  - Exported production-grade Postman collection: `postman/EchoGPT_Backend.postman_collection.json` (30+ requests covering all 8 modules).
+  - Exported Postman environment template: `postman/EchoGPT_Local.postman_environment.json` with pre-configured seed accounts and auto-token extraction scripts (`pm.environment.set('accessToken', ...)`).
+- [x] **GitHub Actions Continuous Integration**:
+  - Created `.github/workflows/ci.yml` running on `push` and `pull_request` to `main`.
+  - Configured PostgreSQL 16 container service, automated migrations, database seeding, ESLint validation, unit tests with coverage, E2E integration tests, and production build verification.
+- [x] **Zero Linter Errors**: Clean ESLint run across all files (`npm run lint` passes with 0 errors).
+- [x] Full automated test suite passing: **214 tests total (124 unit, 90 E2E) across 28 test suites**.
+
+### Phase 11: README & Submission Polish (UPCOMING)
+- [ ] Comprehensive documentation review (setup instructions, environment variables table, architecture diagram).
+- [ ] Postman import instructions and click-through verification guide.
+- [ ] Production run verification with Docker Compose.
+
 
 
 ---

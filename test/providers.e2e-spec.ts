@@ -50,9 +50,7 @@ describe('AI Provider Management (e2e)', () => {
 
   describe('GET /api/providers', () => {
     it('should return 401 Unauthorized without Bearer token', () => {
-      return request(app.getHttpServer())
-        .get('/api/providers')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/providers').expect(401);
     });
 
     it('should return list of providers for authenticated user without leaking raw or encrypted keys', async () => {
@@ -161,7 +159,9 @@ describe('AI Provider Management (e2e)', () => {
         const listRes = await request(app.getHttpServer())
           .get('/api/providers')
           .set('Authorization', `Bearer ${adminToken}`);
-        const openai = listRes.body.find((p: any) => p.name === ProviderType.OPENAI);
+        const openai = listRes.body.find(
+          (p: any) => p.name === ProviderType.OPENAI,
+        );
         openaiProviderId = openai.id;
       }
 

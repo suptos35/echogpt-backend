@@ -58,7 +58,8 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
             level: isTest ? 'silent' : isProd ? 'info' : 'debug',
             genReqId: (req, res) => {
               const existingId = req.headers['x-request-id'];
-              if (existingId && typeof existingId === 'string') return existingId;
+              if (existingId && typeof existingId === 'string')
+                return existingId;
               const id = crypto.randomUUID();
               res.setHeader('x-request-id', id);
               return id;
@@ -117,5 +118,3 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
   ],
 })
 export class AppModule {}
-
-

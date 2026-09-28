@@ -51,7 +51,10 @@ export class AdminProvidersMetricDto {
   @ApiProperty({ example: 3, description: 'Active AI providers' })
   active: number;
 
-  @ApiProperty({ example: 'Google Gemini', description: 'System default AI provider' })
+  @ApiProperty({
+    example: 'Google Gemini',
+    description: 'System default AI provider',
+  })
   defaultProvider: string | null;
 }
 
@@ -59,10 +62,16 @@ export class AdminApiUsageMetricDto {
   @ApiProperty({ example: 2450, description: 'Total API requests recorded' })
   totalRequests: number;
 
-  @ApiProperty({ example: 180, description: 'API requests received today (UTC)' })
+  @ApiProperty({
+    example: 180,
+    description: 'API requests received today (UTC)',
+  })
   requestsToday: number;
 
-  @ApiProperty({ example: 125, description: 'Average response latency in milliseconds' })
+  @ApiProperty({
+    example: 125,
+    description: 'Average response latency in milliseconds',
+  })
   avgLatencyMs: number;
 }
 

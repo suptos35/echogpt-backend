@@ -34,10 +34,16 @@ export class ConversationSummaryDto {
   @ApiPropertyOptional({ example: 'gemini-1.5-flash', nullable: true })
   modelUsed?: string | null;
 
-  @ApiPropertyOptional({ example: 'Google Gemini (Free Tier Default)', nullable: true })
+  @ApiPropertyOptional({
+    example: 'Google Gemini (Free Tier Default)',
+    nullable: true,
+  })
   providerName?: string | null;
 
-  @ApiProperty({ example: 4, description: 'Total message count in this conversation thread' })
+  @ApiProperty({
+    example: 4,
+    description: 'Total message count in this conversation thread',
+  })
   messageCount: number;
 
   @ApiProperty({ example: '2026-09-29T12:00:00.000Z' })
@@ -57,7 +63,10 @@ export class ConversationDetailDto {
   @ApiPropertyOptional({ example: 'gemini-1.5-flash', nullable: true })
   modelUsed?: string | null;
 
-  @ApiPropertyOptional({ example: 'Google Gemini (Free Tier Default)', nullable: true })
+  @ApiPropertyOptional({
+    example: 'Google Gemini (Free Tier Default)',
+    nullable: true,
+  })
   providerName?: string | null;
 
   @ApiProperty({ type: [MessageItemDto] })

@@ -76,7 +76,8 @@ describe('Admin Panel APIs (e2e)', () => {
     it.each(adminEndpoints)(
       'should reject standard user request with 403 Forbidden for $method $url',
       async ({ method, url }) => {
-        const req = (request(app.getHttpServer()) as any)[method](url)
+        const req = (request(app.getHttpServer()) as any)
+          [method](url)
           .set('Authorization', `Bearer ${userToken}`);
         if (method === 'patch') {
           req.send({ isActive: false });
@@ -136,7 +137,9 @@ describe('Admin Panel APIs (e2e)', () => {
       expect(res.body.pagination.total).toBeGreaterThanOrEqual(2);
 
       // Verify user items omit password hashes and include subscriptions
-      const testUserItem = res.body.users.find((u: any) => u.email === testUserEmail);
+      const testUserItem = res.body.users.find(
+        (u: any) => u.email === testUserEmail,
+      );
       expect(testUserItem).toBeDefined();
       expect(testUserItem).not.toHaveProperty('passwordHash');
       expect(testUserItem).toHaveProperty('role', RoleName.USER);
@@ -151,7 +154,9 @@ describe('Admin Panel APIs (e2e)', () => {
 
       expect(Array.isArray(res.body.users)).toBe(true);
       expect(res.body.users.length).toBeGreaterThanOrEqual(1);
-      const adminItem = res.body.users.find((u: any) => u.email === 'admin@echogpt.app');
+      const adminItem = res.body.users.find(
+        (u: any) => u.email === 'admin@echogpt.app',
+      );
       expect(adminItem).toBeDefined();
       expect(adminItem).not.toHaveProperty('passwordHash');
       for (const u of res.body.users) {
@@ -178,7 +183,9 @@ describe('Admin Panel APIs (e2e)', () => {
         .send({ isActive: false })
         .expect(400);
 
-      expect(res.body.message).toContain('Cannot deactivate your own administrator account');
+      expect(res.body.message).toContain(
+        'Cannot deactivate your own administrator account',
+      );
     });
 
     it('should return 404 if target user does not exist', async () => {

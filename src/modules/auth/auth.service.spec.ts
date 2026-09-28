@@ -31,7 +31,11 @@ describe('AuthService', () => {
     };
 
     jwtService = {
-      signAsync: jest.fn().mockImplementation((payload) => Promise.resolve(`signed_token_${payload.sub}`)),
+      signAsync: jest
+        .fn()
+        .mockImplementation((payload) =>
+          Promise.resolve(`signed_token_${payload.sub}`),
+        ),
       verifyAsync: jest.fn(),
     };
 
@@ -63,7 +67,10 @@ describe('AuthService', () => {
 
   describe('register', () => {
     it('should throw ConflictException if user email already exists', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: '1', email: 'existing@echogpt.app' });
+      prisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        email: 'existing@echogpt.app',
+      });
 
       await expect(
         service.register({
@@ -75,7 +82,10 @@ describe('AuthService', () => {
 
     it('should successfully register a new user with hashed password and issue tokens', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
-      prisma.role.findUnique.mockResolvedValue({ id: 'role-user-id', name: RoleName.USER });
+      prisma.role.findUnique.mockResolvedValue({
+        id: 'role-user-id',
+        name: RoleName.USER,
+      });
       prisma.user.create.mockResolvedValue({
         id: 'new-user-id',
         email: 'new@echogpt.app',
@@ -110,7 +120,10 @@ describe('AuthService', () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.login({ email: 'nonexistent@echogpt.app', password: 'Password123!' }),
+        service.login({
+          email: 'nonexistent@echogpt.app',
+          password: 'Password123!',
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -125,7 +138,10 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.login({ email: 'user@echogpt.app', password: 'WrongPassword!' }),
+        service.login({
+          email: 'user@echogpt.app',
+          password: 'WrongPassword!',
+        }),
       ).rejects.toThrow(UnauthorizedException);
     });
 
@@ -140,7 +156,10 @@ describe('AuthService', () => {
       });
       prisma.refreshToken.create.mockResolvedValue({});
 
-      const result = await service.login({ email: 'user@echogpt.app', password: 'CorrectPassword123!' });
+      const result = await service.login({
+        email: 'user@echogpt.app',
+        password: 'CorrectPassword123!',
+      });
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
@@ -148,13 +167,120 @@ describe('AuthService', () => {
     });
   });
 
+  describe('refreshTokens', () => {
+    it('should throw UnauthorizedException if token verification fails', async () => {
+      jwtService.verifyAsync.mockRejectedValue(new Error('Invalid token'));
+
+      await expect(
+        service.refreshTokens({ refreshToken: 'invalid-token' }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should detect replayed revoked token, revoke token family, and throw UnauthorizedException', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: 'user-1',
+        email: 'user@echogpt.app',
+        role: 'USER',
+      });
+
+      prisma.refreshToken.findUnique.mockResolvedValue({
+        id: 'token-1',
+        userId: 'user-1',
+        isRevoked: true,
+        expiresAt: new Date(Date.now() + 100000),
+      });
+
+      await expect(
+        service.refreshTokens({ refreshToken: 'revoked-token' }),
+      ).rejects.toThrow(UnauthorizedException);
+
+      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
+      });
+    });
+
+    it('should throw UnauthorizedException if user is deactivated', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: 'user-1',
+        email: 'user@echogpt.app',
+        role: 'USER',
+      });
+
+      prisma.refreshToken.findUnique.mockResolvedValue({
+        id: 'token-2',
+        userId: 'user-1',
+        isRevoked: false,
+        expiresAt: new Date(Date.now() + 100000),
+        user: {
+          id: 'user-1',
+          email: 'user@echogpt.app',
+          isActive: false,
+          role: { name: 'USER' },
+        },
+      });
+
+      await expect(
+        service.refreshTokens({ refreshToken: 'valid-token' }),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should successfully rotate refresh token and issue new token pair', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: 'user-1',
+        email: 'user@echogpt.app',
+        role: 'USER',
+      });
+
+      prisma.refreshToken.findUnique.mockResolvedValue({
+        id: 'token-3',
+        userId: 'user-1',
+        isRevoked: false,
+        expiresAt: new Date(Date.now() + 100000),
+        user: {
+          id: 'user-1',
+          email: 'user@echogpt.app',
+          firstName: 'John',
+          lastName: 'Doe',
+          isActive: true,
+          role: { name: 'USER' },
+        },
+      });
+
+      prisma.refreshToken.delete.mockResolvedValue({});
+      prisma.refreshToken.create.mockResolvedValue({});
+
+      const result = await service.refreshTokens({
+        refreshToken: 'valid-token',
+      });
+
+      expect(result).toHaveProperty('accessToken');
+      expect(result).toHaveProperty('refreshToken');
+      expect(prisma.refreshToken.delete).toHaveBeenCalledWith({
+        where: { id: 'token-3' },
+      });
+    });
+  });
+
   describe('logout', () => {
-    it('should delete user refresh tokens and return success', async () => {
+    it('should delete all user refresh tokens when no specific token is provided', async () => {
       prisma.refreshToken.deleteMany.mockResolvedValue({ count: 1 });
 
       const result = await service.logout('user-1');
-      expect(result).toEqual({ success: true, message: 'Successfully logged out' });
-      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user-1' } });
+      expect(result).toEqual({
+        success: true,
+        message: 'Successfully logged out',
+      });
+      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
+      });
+    });
+
+    it('should delete specific refresh token when provided', async () => {
+      prisma.refreshToken.deleteMany.mockResolvedValue({ count: 1 });
+
+      const result = await service.logout('user-1', 'specific-token');
+      expect(result.success).toBe(true);
+      expect(prisma.refreshToken.deleteMany).toHaveBeenCalled();
     });
   });
 });

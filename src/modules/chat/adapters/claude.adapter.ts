@@ -69,8 +69,10 @@ export class ClaudeAdapter implements AiProviderAdapter {
 
     const data = await response.json();
     const text = data.content?.[0]?.text || '';
-    const promptTokens = data.usage?.input_tokens || Math.ceil(prompt.length / 4);
-    const completionTokens = data.usage?.output_tokens || Math.ceil(text.length / 4);
+    const promptTokens =
+      data.usage?.input_tokens || Math.ceil(prompt.length / 4);
+    const completionTokens =
+      data.usage?.output_tokens || Math.ceil(text.length / 4);
 
     return {
       text,

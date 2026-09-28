@@ -14,7 +14,11 @@ describe('AI Provider Adapters (Unit Tests)', () => {
     geminiAdapter = new GeminiAdapter();
     openAiAdapter = new OpenAiAdapter();
     claudeAdapter = new ClaudeAdapter();
-    factory = new AiProviderFactory(geminiAdapter, openAiAdapter, claudeAdapter);
+    factory = new AiProviderFactory(
+      geminiAdapter,
+      openAiAdapter,
+      claudeAdapter,
+    );
   });
 
   describe('Factory', () => {
@@ -50,7 +54,9 @@ describe('AI Provider Adapters (Unit Tests)', () => {
       expect(response.model).toBe('gemini-1.5-flash');
       expect(response.promptTokens).toBeGreaterThan(0);
       expect(response.completionTokens).toBeGreaterThan(0);
-      expect(response.totalTokens).toBe(response.promptTokens + response.completionTokens);
+      expect(response.totalTokens).toBe(
+        response.promptTokens + response.completionTokens,
+      );
     });
   });
 

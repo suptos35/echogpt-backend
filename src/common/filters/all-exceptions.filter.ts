@@ -30,7 +30,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
       const respObj = exceptionResponse as Record<string, any>;
-      message = respObj.message !== undefined ? respObj.message : exceptionResponse;
+      message =
+        respObj.message !== undefined ? respObj.message : exceptionResponse;
       errorName = respObj.error;
     } else if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;

@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
@@ -20,10 +24,7 @@ describe('UsersService (TDD)', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UsersService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [UsersService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
@@ -37,7 +38,9 @@ describe('UsersService (TDD)', () => {
     it('should throw NotFoundException if user not found', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.getProfile('nonexistent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getProfile('nonexistent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should return user profile with role and subscription details', async () => {
@@ -140,9 +143,14 @@ describe('UsersService (TDD)', () => {
         newPassword: 'BrandNewPassword123!',
       });
 
-      expect(result).toEqual({ success: true, message: 'Password changed successfully' });
+      expect(result).toEqual({
+        success: true,
+        message: 'Password changed successfully',
+      });
       expect(prisma.user.update).toHaveBeenCalled();
-      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user-1' } });
+      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
+      });
     });
   });
 
@@ -152,12 +160,17 @@ describe('UsersService (TDD)', () => {
       prisma.refreshToken.deleteMany.mockResolvedValue({ count: 1 });
 
       const result = await service.deleteAccount('user-1');
-      expect(result).toEqual({ success: true, message: 'Account deleted successfully' });
+      expect(result).toEqual({
+        success: true,
+        message: 'Account deleted successfully',
+      });
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-1' },
         data: { isActive: false },
       });
-      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({ where: { userId: 'user-1' } });
+      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'user-1' },
+      });
     });
   });
 });

@@ -5,7 +5,7 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import { AiProvider, ProviderType } from '@prisma/client';
+import { AiProvider } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { CryptoService } from '../../common/crypto/crypto.service';
 import { CreateProviderDto } from './dto/create-provider.dto';
@@ -64,7 +64,9 @@ export class ProvidersService {
     }
 
     if (!provider) {
-      throw new NotFoundException('No active AI provider configured in the system');
+      throw new NotFoundException(
+        'No active AI provider configured in the system',
+      );
     }
 
     return provider;
@@ -85,8 +87,13 @@ export class ProvidersService {
     try {
       return this.cryptoService.decrypt(provider.encryptedApiKey);
     } catch (error) {
-      this.logger.error(`Failed to decrypt API key for provider ${providerId}`, error);
-      throw new BadRequestException('Failed to decrypt stored provider credentials');
+      this.logger.error(
+        `Failed to decrypt API key for provider ${providerId}`,
+        error,
+      );
+      throw new BadRequestException(
+        'Failed to decrypt stored provider credentials',
+      );
     }
   }
 
@@ -99,7 +106,9 @@ export class ProvidersService {
     });
 
     if (existing) {
-      throw new ConflictException(`AI Provider '${dto.name}' already exists. Use update instead.`);
+      throw new ConflictException(
+        `AI Provider '${dto.name}' already exists. Use update instead.`,
+      );
     }
 
     const encryptedApiKey = dto.apiKey
@@ -125,7 +134,9 @@ export class ProvidersService {
           },
         });
 
-        this.logger.log(`Created default AI Provider: ${created.name} (${created.id})`);
+        this.logger.log(
+          `Created default AI Provider: ${created.name} (${created.id})`,
+        );
         return this.sanitizeProvider(created);
       });
     }
@@ -150,7 +161,10 @@ export class ProvidersService {
   /**
    * Update AI provider settings, optionally rotating the encrypted API key
    */
-  async updateProvider(id: string, dto: UpdateProviderDto): Promise<ProviderResponseDto> {
+  async updateProvider(
+    id: string,
+    dto: UpdateProviderDto,
+  ): Promise<ProviderResponseDto> {
     const provider = await this.prisma.aiProvider.findUnique({
       where: { id },
     });
@@ -161,7 +175,9 @@ export class ProvidersService {
 
     let encryptedApiKey = provider.encryptedApiKey;
     if (dto.apiKey !== undefined) {
-      encryptedApiKey = dto.apiKey ? this.cryptoService.encrypt(dto.apiKey) : null;
+      encryptedApiKey = dto.apiKey
+        ? this.cryptoService.encrypt(dto.apiKey)
+        : null;
     }
 
     if (dto.isDefault === true) {
@@ -177,14 +193,18 @@ export class ProvidersService {
             ...(dto.displayName && { displayName: dto.displayName }),
             ...(dto.baseUrl !== undefined && { baseUrl: dto.baseUrl }),
             ...(dto.defaultModel && { defaultModel: dto.defaultModel }),
-            ...(dto.availableModels && { availableModels: dto.availableModels }),
+            ...(dto.availableModels && {
+              availableModels: dto.availableModels,
+            }),
             ...(dto.isEnabled !== undefined && { isEnabled: dto.isEnabled }),
             encryptedApiKey,
             isDefault: true,
           },
         });
 
-        this.logger.log(`Updated AI Provider and set as default: ${updated.name} (${updated.id})`);
+        this.logger.log(
+          `Updated AI Provider and set as default: ${updated.name} (${updated.id})`,
+        );
         return this.sanitizeProvider(updated);
       });
     }
@@ -219,7 +239,9 @@ export class ProvidersService {
     }
 
     if (!provider.isEnabled) {
-      throw new BadRequestException('Cannot set a disabled provider as system default');
+      throw new BadRequestException(
+        'Cannot set a disabled provider as system default',
+      );
     }
 
     await this.prisma.aiProvider.updateMany({
@@ -232,7 +254,9 @@ export class ProvidersService {
       data: { isDefault: true },
     });
 
-    this.logger.log(`Default AI Provider switched to: ${updated.name} (${updated.id})`);
+    this.logger.log(
+      `Default AI Provider switched to: ${updated.name} (${updated.id})`,
+    );
     return this.sanitizeProvider(updated);
   }
 

@@ -25,7 +25,10 @@ import { AdminService } from './admin.service';
 import { AdminDashboardResponseDto } from './dto/admin-dashboard.dto';
 import { AdminUsersQueryDto } from './dto/admin-users-query.dto';
 import { AdminUsersListResponseDto } from './dto/admin-user-item.dto';
-import { UpdateUserStatusDto, AdminUserStatusResponseDto } from './dto/update-user-status.dto';
+import {
+  UpdateUserStatusDto,
+  AdminUserStatusResponseDto,
+} from './dto/update-user-status.dto';
 import { AdminSubscriptionsResponseDto } from './dto/admin-subscriptions.dto';
 import { AdminLogsQueryDto } from './dto/admin-logs-query.dto';
 import { AdminLogsResponseDto } from './dto/admin-logs-response.dto';
@@ -42,7 +45,8 @@ export class AdminController {
   @Get('dashboard')
   @ApiOperation({
     summary: 'System-wide dashboard statistics',
-    description: 'Retrieves aggregated counts and metrics across users, subscriptions, conversations, web searches, providers, and API requests. Restricted to administrators.',
+    description:
+      'Retrieves aggregated counts and metrics across users, subscriptions, conversations, web searches, providers, and API requests. Restricted to administrators.',
   })
   @ApiResponse({
     status: 200,
@@ -58,7 +62,8 @@ export class AdminController {
   @Get('users')
   @ApiOperation({
     summary: 'List users with pagination and filters',
-    description: 'Retrieves paginated user accounts with optional filtering by role, activation status, or search string. Restricted to administrators.',
+    description:
+      'Retrieves paginated user accounts with optional filtering by role, activation status, or search string. Restricted to administrators.',
   })
   @ApiResponse({
     status: 200,
@@ -67,7 +72,9 @@ export class AdminController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires ADMIN role' })
-  async getUsers(@Query() query: AdminUsersQueryDto): Promise<AdminUsersListResponseDto> {
+  async getUsers(
+    @Query() query: AdminUsersQueryDto,
+  ): Promise<AdminUsersListResponseDto> {
     return this.adminService.getUsers(query);
   }
 
@@ -75,7 +82,8 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Activate or deactivate user account',
-    description: 'Modifies user active status. Deactivating an account immediately revokes all active refresh tokens and terminates active sessions. Restricted to administrators.',
+    description:
+      'Modifies user active status. Deactivating an account immediately revokes all active refresh tokens and terminates active sessions. Restricted to administrators.',
   })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({
@@ -83,7 +91,10 @@ export class AdminController {
     description: 'User status successfully updated',
     type: AdminUserStatusResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Cannot deactivate own administrator account' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot deactivate own administrator account',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires ADMIN role' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -98,7 +109,8 @@ export class AdminController {
   @Get('subscriptions')
   @ApiOperation({
     summary: 'Subscription breakdown and active subscribers',
-    description: 'Provides breakdown of subscriptions across FREE and PREMIUM tiers, along with detailed subscriber usage quotas. Restricted to administrators.',
+    description:
+      'Provides breakdown of subscriptions across FREE and PREMIUM tiers, along with detailed subscriber usage quotas. Restricted to administrators.',
   })
   @ApiResponse({
     status: 200,
@@ -114,7 +126,8 @@ export class AdminController {
   @Get('logs')
   @ApiOperation({
     summary: 'System API request logs',
-    description: 'Retrieves chronological API request logs with filtering by user, endpoint, method, or status code for monitoring and auditing. Restricted to administrators.',
+    description:
+      'Retrieves chronological API request logs with filtering by user, endpoint, method, or status code for monitoring and auditing. Restricted to administrators.',
   })
   @ApiResponse({
     status: 200,
@@ -123,14 +136,17 @@ export class AdminController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden — requires ADMIN role' })
-  async getLogs(@Query() query: AdminLogsQueryDto): Promise<AdminLogsResponseDto> {
+  async getLogs(
+    @Query() query: AdminLogsQueryDto,
+  ): Promise<AdminLogsResponseDto> {
     return this.adminService.getApiUsageLogs(query);
   }
 
   @Get('health')
   @ApiOperation({
     summary: 'Comprehensive system health and diagnostics',
-    description: 'Provides real-time health diagnostics including database roundtrip ping latency, memory utilization, and process status. Restricted to administrators.',
+    description:
+      'Provides real-time health diagnostics including database roundtrip ping latency, memory utilization, and process status. Restricted to administrators.',
   })
   @ApiResponse({
     status: 200,

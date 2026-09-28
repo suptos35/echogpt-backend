@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { RoleName, PlanType, SubscriptionStatus, ProviderType } from '@prisma/client';
+import {
+  RoleName,
+  PlanType,
+  SubscriptionStatus,
+  ProviderType,
+} from '@prisma/client';
 import { AdminService } from './admin.service';
 import { PrismaService } from '../../common/prisma/prisma.service';
 
@@ -69,15 +74,15 @@ describe('AdminService', () => {
       // Mock user counts: total, active, inactive, verified
       prisma.user.count
         .mockResolvedValueOnce(10) // total
-        .mockResolvedValueOnce(8)  // active
-        .mockResolvedValueOnce(2)  // inactive
+        .mockResolvedValueOnce(8) // active
+        .mockResolvedValueOnce(2) // inactive
         .mockResolvedValueOnce(9); // verified
 
       // Mock subscription counts: total, free, premium, active
       prisma.subscription.count
         .mockResolvedValueOnce(10) // total
-        .mockResolvedValueOnce(7)  // free
-        .mockResolvedValueOnce(3)  // premium
+        .mockResolvedValueOnce(7) // free
+        .mockResolvedValueOnce(3) // premium
         .mockResolvedValueOnce(9); // active
 
       // Mock conversation and message counts
@@ -210,7 +215,9 @@ describe('AdminService', () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.updateUserStatus('admin-1', 'missing-user', { isActive: false }),
+        service.updateUserStatus('admin-1', 'missing-user', {
+          isActive: false,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -267,7 +274,7 @@ describe('AdminService', () => {
         .mockResolvedValueOnce(40) // free
         .mockResolvedValueOnce(10) // premium
         .mockResolvedValueOnce(48) // active
-        .mockResolvedValueOnce(2)  // cancelled
+        .mockResolvedValueOnce(2) // cancelled
         .mockResolvedValueOnce(0); // expired
 
       prisma.subscription.findMany.mockResolvedValue([

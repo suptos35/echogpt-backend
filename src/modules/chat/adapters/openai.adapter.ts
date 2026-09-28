@@ -67,8 +67,10 @@ export class OpenAiAdapter implements AiProviderAdapter {
 
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content || '';
-    const promptTokens = data.usage?.prompt_tokens || Math.ceil(prompt.length / 4);
-    const completionTokens = data.usage?.completion_tokens || Math.ceil(text.length / 4);
+    const promptTokens =
+      data.usage?.prompt_tokens || Math.ceil(prompt.length / 4);
+    const completionTokens =
+      data.usage?.completion_tokens || Math.ceil(text.length / 4);
 
     return {
       text,

@@ -52,7 +52,9 @@ describe('ChatService (Unit Tests)', () => {
     };
 
     subscriptionService = {
-      consumeQuota: jest.fn().mockResolvedValue({ allowed: true, remainingRequests: 19 }),
+      consumeQuota: jest
+        .fn()
+        .mockResolvedValue({ allowed: true, remainingRequests: 19 }),
     };
 
     providersService = {
@@ -97,7 +99,11 @@ describe('ChatService (Unit Tests)', () => {
     it('should check quota, create conversation, save messages, and return response', async () => {
       prisma.conversation.create.mockResolvedValue(mockConversation);
       prisma.message.create
-        .mockResolvedValueOnce({ id: 'msg-user-1', role: MessageRole.USER, content: 'What is NestJS?' })
+        .mockResolvedValueOnce({
+          id: 'msg-user-1',
+          role: MessageRole.USER,
+          content: 'What is NestJS?',
+        })
         .mockResolvedValueOnce({
           id: 'msg-asst-1',
           role: MessageRole.ASSISTANT,
@@ -120,7 +126,10 @@ describe('ChatService (Unit Tests)', () => {
 
     it('should throw 429 Too Many Requests if user quota is exhausted', async () => {
       subscriptionService.consumeQuota.mockRejectedValue(
-        new HttpException('Daily request quota exhausted', HttpStatus.TOO_MANY_REQUESTS),
+        new HttpException(
+          'Daily request quota exhausted',
+          HttpStatus.TOO_MANY_REQUESTS,
+        ),
       );
 
       await expect(
@@ -134,10 +143,17 @@ describe('ChatService (Unit Tests)', () => {
       prisma.conversation.findFirst.mockResolvedValue(mockConversation);
       prisma.message.create
         .mockResolvedValueOnce({ id: 'msg-user-2', role: MessageRole.USER })
-        .mockResolvedValueOnce({ id: 'msg-asst-2', role: MessageRole.ASSISTANT, totalTokens: 20 });
+        .mockResolvedValueOnce({
+          id: 'msg-asst-2',
+          role: MessageRole.ASSISTANT,
+          totalTokens: 20,
+        });
       prisma.message.findMany.mockResolvedValue([
         { role: MessageRole.USER, content: 'What is NestJS?' },
-        { role: MessageRole.ASSISTANT, content: 'NestJS is a Node.js framework.' },
+        {
+          role: MessageRole.ASSISTANT,
+          content: 'NestJS is a Node.js framework.',
+        },
       ]);
       prisma.conversation.update.mockResolvedValue(mockConversation);
 
@@ -181,9 +197,9 @@ describe('ChatService (Unit Tests)', () => {
     it('should throw NotFoundException if conversation not found or belongs to another user', async () => {
       prisma.conversation.findFirst.mockResolvedValue(null);
 
-      await expect(service.getConversation('user-1', 'invalid-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.getConversation('user-1', 'invalid-id'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

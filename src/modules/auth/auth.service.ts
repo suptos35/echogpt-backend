@@ -43,7 +43,9 @@ export class AuthService {
     });
 
     if (!userRole) {
-      throw new InternalServerErrorException('Default user role not found in database');
+      throw new InternalServerErrorException(
+        'Default user role not found in database',
+      );
     }
 
     const saltRounds = 10;
@@ -70,8 +72,16 @@ export class AuthService {
       },
     });
 
-    this.logger.log(`User registered: userId=${newUser.id}, role=${newUser.role.name}`);
-    return this.issueTokenFamily(newUser.id, newUser.email, newUser.role.name, newUser.firstName, newUser.lastName);
+    this.logger.log(
+      `User registered: userId=${newUser.id}, role=${newUser.role.name}`,
+    );
+    return this.issueTokenFamily(
+      newUser.id,
+      newUser.email,
+      newUser.role.name,
+      newUser.firstName,
+      newUser.lastName,
+    );
   }
 
   /**
@@ -84,34 +94,50 @@ export class AuthService {
     });
 
     if (!user) {
-      this.logger.warn(`Failed login attempt: email not found for ${dto.email}`);
+      this.logger.warn(
+        `Failed login attempt: email not found for ${dto.email}`,
+      );
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
-      this.logger.warn(`Failed login attempt: invalid password for email ${dto.email}`);
+      this.logger.warn(
+        `Failed login attempt: invalid password for email ${dto.email}`,
+      );
       throw new UnauthorizedException('Invalid email or password');
     }
 
     if (!user.isActive) {
-      this.logger.warn(`Failed login attempt: account deactivated for userId ${user.id}`);
+      this.logger.warn(
+        `Failed login attempt: account deactivated for userId ${user.id}`,
+      );
       throw new UnauthorizedException('User account has been deactivated');
     }
 
     this.logger.log(`User login successful: userId=${user.id}`);
-    return this.issueTokenFamily(user.id, user.email, user.role.name, user.firstName, user.lastName);
+    return this.issueTokenFamily(
+      user.id,
+      user.email,
+      user.role.name,
+      user.firstName,
+      user.lastName,
+    );
   }
 
   /**
    * Rotate refresh token: invalidates used token and issues a new pair
    */
   async refreshTokens(dto: RefreshTokenDto): Promise<AuthResponseDto> {
-    const refreshSecret = this.configService.get<string>('jwt.refreshSecret') || 'echogpt_super_secret_jwt_refresh_key_change_in_production';
+    const refreshSecret =
+      this.configService.get<string>('jwt.refreshSecret') ||
+      'echogpt_super_secret_jwt_refresh_key_change_in_production';
 
-    let payload: { sub: string; email: string; role: string };
     try {
-      payload = await this.jwtService.verifyAsync(dto.refreshToken, {
+      await this.jwtService.verifyAsync(dto.refreshToken, {
         secret: refreshSecret,
       });
     } catch {
@@ -129,15 +155,23 @@ export class AuthService {
       },
     });
 
-    if (!storedToken || storedToken.isRevoked || storedToken.expiresAt < new Date()) {
+    if (
+      !storedToken ||
+      storedToken.isRevoked ||
+      storedToken.expiresAt < new Date()
+    ) {
       // Security measure: if a revoked/replayed token is used, invalidate all user sessions
       if (storedToken && storedToken.isRevoked) {
-        this.logger.warn(`Security alert: Replayed revoked refresh token detected for user ${storedToken.userId}. Revoking token family.`);
+        this.logger.warn(
+          `Security alert: Replayed revoked refresh token detected for user ${storedToken.userId}. Revoking token family.`,
+        );
         await this.prisma.refreshToken.deleteMany({
           where: { userId: storedToken.userId },
         });
       }
-      throw new UnauthorizedException('Invalid, revoked, or expired refresh token');
+      throw new UnauthorizedException(
+        'Invalid, revoked, or expired refresh token',
+      );
     }
 
     // Invalidate the current used refresh token (Rotation)
@@ -147,18 +181,29 @@ export class AuthService {
 
     const user = storedToken.user;
     if (!user.isActive) {
-      this.logger.warn(`Token refresh failed: account deactivated for userId ${user.id}`);
+      this.logger.warn(
+        `Token refresh failed: account deactivated for userId ${user.id}`,
+      );
       throw new UnauthorizedException('User account has been deactivated');
     }
 
     this.logger.log(`Refresh token rotated successfully for userId=${user.id}`);
-    return this.issueTokenFamily(user.id, user.email, user.role.name, user.firstName, user.lastName);
+    return this.issueTokenFamily(
+      user.id,
+      user.email,
+      user.role.name,
+      user.firstName,
+      user.lastName,
+    );
   }
 
   /**
    * Log out user: removes the specific refresh token or clears all active sessions
    */
-  async logout(userId: string, refreshToken?: string): Promise<{ success: boolean; message: string }> {
+  async logout(
+    userId: string,
+    refreshToken?: string,
+  ): Promise<{ success: boolean; message: string }> {
     if (refreshToken) {
       const tokenHash = this.hashToken(refreshToken);
       await this.prisma.refreshToken.deleteMany({
@@ -187,13 +232,24 @@ export class AuthService {
     firstName?: string | null,
     lastName?: string | null,
   ): Promise<AuthResponseDto> {
-    const accessSecret = this.configService.get<string>('jwt.secret') || 'echogpt_super_secret_jwt_access_key_change_in_production';
-    const accessExpiresIn = this.configService.get<string>('jwt.expiresIn') || '15m';
-    const refreshSecret = this.configService.get<string>('jwt.refreshSecret') || 'echogpt_super_secret_jwt_refresh_key_change_in_production';
-    const refreshExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
+    const accessSecret =
+      this.configService.get<string>('jwt.secret') ||
+      'echogpt_super_secret_jwt_access_key_change_in_production';
+    const accessExpiresIn =
+      this.configService.get<string>('jwt.expiresIn') || '15m';
+    const refreshSecret =
+      this.configService.get<string>('jwt.refreshSecret') ||
+      'echogpt_super_secret_jwt_refresh_key_change_in_production';
+    const refreshExpiresIn =
+      this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
 
     const accessPayload = { sub: userId, email, role };
-    const refreshPayload = { sub: userId, email, role, jti: crypto.randomUUID() };
+    const refreshPayload = {
+      sub: userId,
+      email,
+      role,
+      jti: crypto.randomUUID(),
+    };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(accessPayload, {

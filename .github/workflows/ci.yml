@@ -1,0 +1,68 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build, Lint & Automated Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: echogpt
+          POSTGRES_PASSWORD: echogpt_password
+          POSTGRES_DB: echogpt_db
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Setup Environment Variables
+        run: |
+          cp .env.example .env
+          echo "DATABASE_URL=postgresql://echogpt:echogpt_password@localhost:5433/echogpt_db?schema=public" >> .env
+          echo "JWT_ACCESS_SECRET=ci_test_jwt_access_secret_super_secure_key_12345" >> .env
+          echo "JWT_REFRESH_SECRET=ci_test_jwt_refresh_secret_super_secure_key_12345" >> .env
+          echo "ENCRYPTION_KEY=01234567890123456789012345678901" >> .env
+          echo "PORT=3000" >> .env
+          echo "NODE_ENV=test" >> .env
+
+      - name: Run Prisma Migrations
+        run: npx prisma migrate deploy
+
+      - name: Seed Database
+        run: npm run seed
+
+      - name: Run ESLint Linter
+        run: npm run lint
+
+      - name: Run Unit Tests with Coverage
+        run: npm run test:cov
+
+      - name: Run E2E Integration Tests
+        run: npm run test:e2e
+
+      - name: Build Production Application
+        run: npm run build

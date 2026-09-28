@@ -50,9 +50,7 @@ describe('User Management & Roles (e2e)', () => {
 
   describe('GET /api/users/profile', () => {
     it('should return 401 Unauthorized without bearer token', () => {
-      return request(app.getHttpServer())
-        .get('/api/users/profile')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/users/profile').expect(401);
     });
 
     it('should return current user profile with subscription tier', async () => {

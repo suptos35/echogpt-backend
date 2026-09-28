@@ -12,7 +12,14 @@ describe('SearchCacheService (Unit Tests)', () => {
   });
 
   it('should set and get a value by normalized query key', () => {
-    const data = [{ title: 'NestJS Docs', url: 'https://nestjs.com', snippet: 'Framework', source: 'DuckDuckGo' }];
+    const data = [
+      {
+        title: 'NestJS Docs',
+        url: 'https://nestjs.com',
+        snippet: 'Framework',
+        source: 'DuckDuckGo',
+      },
+    ];
     cache.set('nestjs documentation', data);
 
     const retrieved = cache.get('  NestJS Documentation  '); // Normalized case & trim
@@ -25,7 +32,14 @@ describe('SearchCacheService (Unit Tests)', () => {
 
   it('should respect TTL and expire items', () => {
     jest.useFakeTimers();
-    const data = [{ title: 'Expiring Test', url: 'https://test.com', snippet: 'Expiring', source: 'DuckDuckGo' }];
+    const data = [
+      {
+        title: 'Expiring Test',
+        url: 'https://test.com',
+        snippet: 'Expiring',
+        source: 'DuckDuckGo',
+      },
+    ];
     cache.set('expiring query', data, 10); // 10 seconds TTL
 
     expect(cache.get('expiring query')).toEqual(data);

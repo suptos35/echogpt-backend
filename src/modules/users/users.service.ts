@@ -54,7 +54,10 @@ export class UsersService {
   /**
    * Update first and last name for current user profile
    */
-  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<UserProfileDto> {
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<UserProfileDto> {
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -101,14 +104,21 @@ export class UsersService {
       throw new NotFoundException('User account not found');
     }
 
-    const isMatch = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    const isMatch = await bcrypt.compare(
+      dto.currentPassword,
+      user.passwordHash,
+    );
     if (!isMatch) {
-      this.logger.warn(`Failed password change attempt: incorrect current password for userId=${userId}`);
+      this.logger.warn(
+        `Failed password change attempt: incorrect current password for userId=${userId}`,
+      );
       throw new UnauthorizedException('Current password does not match');
     }
 
     if (dto.currentPassword === dto.newPassword) {
-      throw new BadRequestException('New password must be different from current password');
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
     }
 
     const saltRounds = 10;
@@ -124,7 +134,9 @@ export class UsersService {
       where: { userId },
     });
 
-    this.logger.log(`Password changed successfully and all sessions revoked for userId=${userId}`);
+    this.logger.log(
+      `Password changed successfully and all sessions revoked for userId=${userId}`,
+    );
 
     return {
       success: true,
@@ -135,7 +147,9 @@ export class UsersService {
   /**
    * Deactivate user account and revoke all active sessions
    */
-  async deleteAccount(userId: string): Promise<{ success: boolean; message: string }> {
+  async deleteAccount(
+    userId: string,
+  ): Promise<{ success: boolean; message: string }> {
     await this.prisma.user.update({
       where: { id: userId },
       data: { isActive: false },
@@ -145,7 +159,9 @@ export class UsersService {
       where: { userId },
     });
 
-    this.logger.warn(`User account deactivated and active sessions cleared: userId=${userId}`);
+    this.logger.warn(
+      `User account deactivated and active sessions cleared: userId=${userId}`,
+    );
 
     return {
       success: true,

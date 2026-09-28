@@ -2,12 +2,18 @@ export default () => ({
   port: parseInt(process.env.PORT || '3000', 10),
   environment: process.env.NODE_ENV || 'development',
   database: {
-    url: process.env.DATABASE_URL || 'postgresql://echogpt:echogpt_password@localhost:5432/echogpt_db?schema=public',
+    url:
+      process.env.DATABASE_URL ||
+      'postgresql://echogpt:echogpt_password@localhost:5432/echogpt_db?schema=public',
   },
   jwt: {
-    secret: process.env.JWT_ACCESS_SECRET || 'echogpt_super_secret_jwt_access_key_change_in_production',
+    secret:
+      process.env.JWT_ACCESS_SECRET ||
+      'echogpt_super_secret_jwt_access_key_change_in_production',
     expiresIn: process.env.JWT_ACCESS_EXPIRATION || '15m',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'echogpt_super_secret_jwt_refresh_key_change_in_production',
+    refreshSecret:
+      process.env.JWT_REFRESH_SECRET ||
+      'echogpt_super_secret_jwt_refresh_key_change_in_production',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
   },
   encryption: {

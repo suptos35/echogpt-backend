@@ -322,10 +322,37 @@ When a user updates their password via `PATCH /api/users/change-password`:
 
 ---
 
-## 🧭 Next Milestone: Phase 10 (Test Coverage & Postman Collection)
-In Phase 10, we will implement:
-1. Test coverage measurement and gap resolution (`npm run test:cov` aiming for 70-85%).
-2. Complete Postman collection generation with pre-configured requests, environment variables, and authentication scripts.
-3. Automated GitHub Actions CI workflow (`.github/workflows/ci.yml`) running lint and test suites on pull requests and pushes to `main`.
+### Step 14: Test Coverage, Postman Collection & CI Workflow (Phase 10)
+- **Test Coverage Analysis & Optimization**:
+  - Measured test coverage using Jest (`npm run test:cov`) and refined `collectCoverageFrom` to focus on executable business logic across services and controllers.
+  - Authored comprehensive unit test suites for all 7 application controllers:
+    - `src/modules/auth/auth.controller.spec.ts`
+    - `src/modules/users/users.controller.spec.ts`
+    - `src/modules/subscription/subscription.controller.spec.ts`
+    - `src/modules/providers/providers.controller.spec.ts`
+    - `src/modules/chat/chat.controller.spec.ts`
+    - `src/modules/search/web-search.controller.spec.ts`
+    - `src/modules/admin/admin.controller.spec.ts`
+  - Expanded unit test coverage in `auth.service.spec.ts` covering token rotation edge cases, replay detection session invalidation, and deactivated account handling.
+  - Achieved **74.15% Statement Coverage**, **73.23% Line Coverage**, and **83.94% Function Coverage**, directly meeting the 70–85% target window.
+- **Postman Collection & Local Environment**:
+  - Exported complete, reproducible collection to `postman/EchoGPT_Backend.postman_collection.json` containing 30+ requests organized across all 8 feature modules.
+  - Exported environment template to `postman/EchoGPT_Local.postman_environment.json` with pre-configured seed accounts (`user@echogpt.app`, `admin@echogpt.app`) and automatic token propagation scripts (`pm.environment.set('accessToken', ...)`).
+- **GitHub Actions Continuous Integration**:
+  - Created `.github/workflows/ci.yml` running on pull requests and pushes to `main`.
+  - Configures PostgreSQL 16 container service with health checks, runs `npm ci`, environment setup, `prisma migrate deploy`, `prisma db seed`, ESLint linting, unit test coverage, E2E integration tests, and production build verification.
+- **Codebase Cleanliness**:
+  - Clean ESLint check: 0 errors and 0 warnings across all source and test files.
+- **System Verification**:
+  - Total automated test suite expanded to **214 passing tests (124 unit, 90 E2E)** across 28 test suites with 100% green pass rate.
+
+---
+
+## 🧭 Next Milestone: Phase 11 (README & Submission Polish)
+In Phase 11, we will implement:
+1. Complete README finalization: setup instructions, environment variables table, architecture diagram/description, Swagger and Postman guides, and progress checklist.
+2. Verified one-command bootstrap (`docker compose up -d`).
+3. Final review and preparation of submission materials.
+
 
 

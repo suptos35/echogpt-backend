@@ -35,7 +35,8 @@ export class ApiUsageInterceptor implements NestInterceptor {
     const endpoint = (req.baseUrl || '') + (req.path || req.url || '');
     const method = req.method || 'GET';
     const userId = req.user?.userId || req.user?.id || null;
-    const ipAddress = (req.headers && req.headers['x-forwarded-for']) || req.ip || null;
+    const ipAddress =
+      (req.headers && req.headers['x-forwarded-for']) || req.ip || null;
     const userAgent = req.headers ? req.headers['user-agent'] || null : null;
 
     // Asynchronously insert log without blocking response
@@ -47,8 +48,10 @@ export class ApiUsageInterceptor implements NestInterceptor {
           method,
           statusCode,
           latencyMs,
-          ipAddress: typeof ipAddress === 'string' ? ipAddress.slice(0, 100) : null,
-          userAgent: typeof userAgent === 'string' ? userAgent.slice(0, 500) : null,
+          ipAddress:
+            typeof ipAddress === 'string' ? ipAddress.slice(0, 100) : null,
+          userAgent:
+            typeof userAgent === 'string' ? userAgent.slice(0, 500) : null,
         },
       })
       .catch(() => {

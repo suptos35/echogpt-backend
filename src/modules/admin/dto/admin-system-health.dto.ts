@@ -4,7 +4,10 @@ export class HealthDatabaseMetricDto {
   @ApiProperty({ example: 'connected', enum: ['connected', 'disconnected'] })
   status: 'connected' | 'disconnected';
 
-  @ApiProperty({ example: 4, description: 'Ping roundtrip latency in milliseconds' })
+  @ApiProperty({
+    example: 4,
+    description: 'Ping roundtrip latency in milliseconds',
+  })
   latencyMs: number;
 }
 
@@ -34,7 +37,10 @@ export class HealthProcessMetricDto {
 }
 
 export class AdminSystemHealthDto {
-  @ApiProperty({ example: 'healthy', enum: ['healthy', 'degraded', 'unhealthy'] })
+  @ApiProperty({
+    example: 'healthy',
+    enum: ['healthy', 'degraded', 'unhealthy'],
+  })
   status: 'healthy' | 'degraded' | 'unhealthy';
 
   @ApiProperty({ example: '2026-09-25T12:00:00.000Z' })

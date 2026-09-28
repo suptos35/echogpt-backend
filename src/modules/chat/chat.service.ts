@@ -4,7 +4,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { MessageRole, ProviderType } from '@prisma/client';
+import { MessageRole } from '@prisma/client';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { SubscriptionService } from '../subscription/subscription.service';
 import { ProvidersService } from '../providers/providers.service';
@@ -30,7 +30,10 @@ export class ChatService {
   /**
    * Process a chat prompt: enforces quota limits, persists history, and routes to appropriate AI provider
    */
-  async sendPrompt(userId: string, dto: SendPromptDto): Promise<SendPromptResponseDto> {
+  async sendPrompt(
+    userId: string,
+    dto: SendPromptDto,
+  ): Promise<SendPromptResponseDto> {
     // 1. Quota Check & Decrement (strictly throws 429 TOO_MANY_REQUESTS if quota hit)
     await this.subscriptionService.consumeQuota(userId);
 
@@ -41,14 +44,18 @@ export class ChatService {
         where: { id: dto.providerId },
       });
       if (!provider) {
-        throw new NotFoundException(`AI Provider '${dto.providerId}' not found`);
+        throw new NotFoundException(
+          `AI Provider '${dto.providerId}' not found`,
+        );
       }
     } else {
       provider = await this.providersService.getDefaultProvider();
     }
 
     if (!provider.isEnabled) {
-      throw new BadRequestException(`AI Provider '${provider.displayName}' is currently disabled`);
+      throw new BadRequestException(
+        `AI Provider '${provider.displayName}' is currently disabled`,
+      );
     }
 
     // 3. Resolve API Key & Model
@@ -65,7 +72,9 @@ export class ChatService {
       });
 
       if (!conversation) {
-        throw new NotFoundException(`Conversation '${dto.conversationId}' not found`);
+        throw new NotFoundException(
+          `Conversation '${dto.conversationId}' not found`,
+        );
       }
     } else {
       const title =
@@ -184,7 +193,10 @@ export class ChatService {
   /**
    * Retrieve full conversation thread with ordered messages
    */
-  async getConversation(userId: string, id: string): Promise<ConversationDetailDto> {
+  async getConversation(
+    userId: string,
+    id: string,
+  ): Promise<ConversationDetailDto> {
     const conversation = await this.prisma.conversation.findFirst({
       where: { id, userId },
       include: {

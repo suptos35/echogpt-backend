@@ -107,9 +107,7 @@ describe('Web Search API & Caching (e2e)', () => {
 
   describe('GET /api/search/recent', () => {
     it('should return 401 Unauthorized without Bearer token', () => {
-      return request(app.getHttpServer())
-        .get('/api/search/recent')
-        .expect(401);
+      return request(app.getHttpServer()).get('/api/search/recent').expect(401);
     });
 
     it('should return distinct recent search query strings', async () => {

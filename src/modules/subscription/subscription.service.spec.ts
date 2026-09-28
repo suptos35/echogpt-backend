@@ -96,7 +96,10 @@ describe('SubscriptionService (Unit Tests)', () => {
 
     it('should auto-create default FREE subscription if none exists for valid user', async () => {
       prisma.subscription.findUnique.mockResolvedValue(null);
-      prisma.user.findUnique.mockResolvedValue({ id: 'user-uuid-1', email: 'test@user.com' });
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'user-uuid-1',
+        email: 'test@user.com',
+      });
       prisma.subscription.create.mockResolvedValue({
         ...mockSubscription,
         usedRequestsToday: 0,
@@ -113,9 +116,9 @@ describe('SubscriptionService (Unit Tests)', () => {
       prisma.subscription.findUnique.mockResolvedValue(null);
       prisma.user.findUnique.mockResolvedValue(null);
 
-      await expect(service.getSubscriptionStatus('unknown-user')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.getSubscriptionStatus('unknown-user'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -220,7 +223,9 @@ describe('SubscriptionService (Unit Tests)', () => {
         maxRequestsPerDay: 20,
       });
 
-      await expect(service.consumeQuota('user-uuid-1')).rejects.toThrow(HttpException);
+      await expect(service.consumeQuota('user-uuid-1')).rejects.toThrow(
+        HttpException,
+      );
       try {
         await service.consumeQuota('user-uuid-1');
       } catch (err: any) {

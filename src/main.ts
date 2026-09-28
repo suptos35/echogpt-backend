@@ -63,13 +63,28 @@ async function bootstrap() {
       'JWT-auth',
     )
     .addTag('System & Health', 'Health check and system diagnostics')
-    .addTag('Authentication', 'User registration, login, logout, and token rotation')
-    .addTag('User Management', 'User profile, password change, account deletion, roles')
-    .addTag('Subscription Management', 'Free & Premium tiers, quotas, remaining requests')
-    .addTag('AI Providers', 'Manage OpenAI, Anthropic, Gemini credentials and defaults')
+    .addTag(
+      'Authentication',
+      'User registration, login, logout, and token rotation',
+    )
+    .addTag(
+      'User Management',
+      'User profile, password change, account deletion, roles',
+    )
+    .addTag(
+      'Subscription Management',
+      'Free & Premium tiers, quotas, remaining requests',
+    )
+    .addTag(
+      'AI Providers',
+      'Manage OpenAI, Anthropic, Gemini credentials and defaults',
+    )
     .addTag('Chat API', 'Multi-model chat completion and conversation history')
     .addTag('Web Search', 'AI-assisted web search and history')
-    .addTag('Admin Panel', 'Administrative statistics, logs, and system analytics')
+    .addTag(
+      'Admin Panel',
+      'Administrative statistics, logs, and system analytics',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -84,7 +99,9 @@ async function bootstrap() {
 
   await app.listen(port);
   logger.log(`🚀 EchoGPT backend running on http://localhost:${port}`);
-  logger.log(`📖 Swagger API documentation available at http://localhost:${port}/api/docs`);
+  logger.log(
+    `📖 Swagger API documentation available at http://localhost:${port}/api/docs`,
+  );
 }
 
 bootstrap();

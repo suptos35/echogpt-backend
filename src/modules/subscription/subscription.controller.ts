@@ -1,4 +1,11 @@
-import { Controller, Get, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -8,7 +15,10 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { SubscriptionService } from './subscription.service';
-import { SubscriptionStatusDto, RemainingRequestsDto } from './dto/subscription-status.dto';
+import {
+  SubscriptionStatusDto,
+  RemainingRequestsDto,
+} from './dto/subscription-status.dto';
 
 @ApiTags('Subscription Management')
 @ApiBearerAuth('JWT-auth')
@@ -20,7 +30,8 @@ export class SubscriptionController {
   @Get('status')
   @ApiOperation({
     summary: 'Get subscription status',
-    description: 'Retrieves current subscription plan, daily limits, and remaining query quota',
+    description:
+      'Retrieves current subscription plan, daily limits, and remaining query quota',
   })
   @ApiResponse({
     status: 200,
@@ -28,7 +39,9 @@ export class SubscriptionController {
     type: SubscriptionStatusDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getStatus(@CurrentUser('userId') userId: string): Promise<SubscriptionStatusDto> {
+  async getStatus(
+    @CurrentUser('userId') userId: string,
+  ): Promise<SubscriptionStatusDto> {
     return this.subscriptionService.getSubscriptionStatus(userId);
   }
 
@@ -36,7 +49,8 @@ export class SubscriptionController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Upgrade subscription to PREMIUM',
-    description: 'Upgrades user subscription to the PREMIUM plan with 500 requests per day',
+    description:
+      'Upgrades user subscription to the PREMIUM plan with 500 requests per day',
   })
   @ApiResponse({
     status: 200,
@@ -44,7 +58,9 @@ export class SubscriptionController {
     type: SubscriptionStatusDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async upgrade(@CurrentUser('userId') userId: string): Promise<SubscriptionStatusDto> {
+  async upgrade(
+    @CurrentUser('userId') userId: string,
+  ): Promise<SubscriptionStatusDto> {
     return this.subscriptionService.upgradeSubscription(userId);
   }
 
@@ -52,7 +68,8 @@ export class SubscriptionController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Downgrade subscription to FREE',
-    description: 'Downgrades user subscription to the FREE plan with 20 requests per day',
+    description:
+      'Downgrades user subscription to the FREE plan with 20 requests per day',
   })
   @ApiResponse({
     status: 200,
@@ -60,14 +77,17 @@ export class SubscriptionController {
     type: SubscriptionStatusDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async downgrade(@CurrentUser('userId') userId: string): Promise<SubscriptionStatusDto> {
+  async downgrade(
+    @CurrentUser('userId') userId: string,
+  ): Promise<SubscriptionStatusDto> {
     return this.subscriptionService.downgradeSubscription(userId);
   }
 
   @Get('remaining-requests')
   @ApiOperation({
     summary: 'Get remaining requests',
-    description: 'Returns the exact number of queries the user can execute today',
+    description:
+      'Returns the exact number of queries the user can execute today',
   })
   @ApiResponse({
     status: 200,
@@ -75,7 +95,9 @@ export class SubscriptionController {
     type: RemainingRequestsDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async getRemainingRequests(@CurrentUser('userId') userId: string): Promise<RemainingRequestsDto> {
+  async getRemainingRequests(
+    @CurrentUser('userId') userId: string,
+  ): Promise<RemainingRequestsDto> {
     return this.subscriptionService.getRemainingRequests(userId);
   }
 }
