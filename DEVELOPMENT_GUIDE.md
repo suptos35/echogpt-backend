@@ -181,11 +181,33 @@ When a user updates their password via `PATCH /api/users/change-password`:
 
 ---
 
-## 🧭 Next Milestone: Phase 4 (Subscription Management — TDD First)
-In Phase 4, we will implement:
-1. Write Unit & E2E tests for subscription tier logic.
-2. `GET /api/subscription/status` (current tier, quota, remaining requests).
-3. `POST /api/subscription/upgrade` (upgrade FREE to PREMIUM).
-4. `POST /api/subscription/downgrade` (downgrade PREMIUM to FREE).
-5. `GET /api/subscription/remaining-requests` (returns integer count of remaining requests today).
-6. Daily quota decrement logic and automated daily reset check.
+### Step 8: Subscription & Quota Management (Phase 4 — TDD First)
+- **TDD Tests First**:
+  - Authored unit test suite `src/modules/subscription/subscription.service.spec.ts` (10 tests) covering quota limits, automatic daily resets, fallback for uninitialized subscriptions, upgrade, downgrade, remaining count queries, and 429 rate limit exceptions.
+  - Authored E2E test suite `test/subscription.e2e-spec.ts` (10 tests) verifying endpoint security (401s), free tier initial status, upgrade to PREMIUM, downgrade back to FREE, and query balances.
+- **Quota & Tier Architecture**:
+  - Implemented `SubscriptionService`:
+    - Free tier: 20 requests per day.
+    - Premium tier: 500 requests per day with 30-day billing cycle tracking.
+    - Automatic UTC day calendar check (`checkAndPerformDailyReset`): automatically resets `usedRequestsToday` to 0 when a new day begins.
+    - Quota decrementing API (`consumeQuota`) that cleanly throws HTTP 429 `TOO_MANY_REQUESTS` if the daily limit is exhausted.
+- **Subscription API Endpoints**:
+  - `GET /api/subscription/status`: Returns plan tier, status, daily limit, used count today, and remaining requests.
+  - `POST /api/subscription/upgrade`: Transitions user to `PREMIUM` with 500 requests/day.
+  - `POST /api/subscription/downgrade`: Transitions user back to `FREE` with 20 requests/day.
+  - `GET /api/subscription/remaining-requests`: Returns `{ remainingRequests: number }`.
+- **System Verification**:
+  - Total automated test suite expanded to **56 passing tests (28 unit, 28 E2E)** with 100% green pass rate.
+
+---
+
+## 🧭 Next Milestone: Phase 5 (AI Provider Management & Encryption — TDD First)
+In Phase 5, we will implement:
+1. Write Unit & E2E tests for `CryptoService` (AES-256-CBC) and AI Provider management endpoints.
+2. `CryptoService`: AES-256 symmetric encryption and decryption with random IV for provider API keys.
+3. `ProvidersService` & `ProvidersController` (`/api/providers`):
+   - `GET /api/providers` (list active providers without leaking raw API keys).
+   - `POST /api/providers` (configure OpenAI, Claude, or Gemini credentials with encrypted key storage).
+   - `PATCH /api/providers/:id` (update provider configurations or rotate API keys).
+   - `POST /api/providers/:id/set-default` (designate system default AI provider).
+   - `GET /api/providers/:id/health` (verify provider connectivity).

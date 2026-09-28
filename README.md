@@ -116,6 +116,9 @@ npm run test:cov
 | **Users** | `DELETE`| `/api/users/account` | Deactivate account and revoke sessions | JWT Bearer |
 | **Users** | `GET` | `/api/users/admin-only-test` | RBAC test route (403 for User, 200 for Admin) | Admin Bearer |
 | **Subscription** | `GET` | `/api/subscription/status` | Current tier & remaining quota | JWT Bearer |
+| **Subscription** | `POST`| `/api/subscription/upgrade` | Upgrade subscription to PREMIUM (500 req/day) | JWT Bearer |
+| **Subscription** | `POST`| `/api/subscription/downgrade`| Downgrade subscription to FREE (20 req/day) | JWT Bearer |
+| **Subscription** | `GET` | `/api/subscription/remaining-requests` | Get remaining daily query count | JWT Bearer |
 | **AI Providers**| `GET` | `/api/providers` | List available AI providers | JWT Bearer |
 | **AI Providers**| `POST` | `/api/admin/providers` | Add/configure provider (Encrypted API key) | Admin Bearer |
 | **Chat** | `POST` | `/api/chat/send-prompt` | Execute prompt through selected AI provider | JWT Bearer |

@@ -12,8 +12,8 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 | **Phase 1** | Database & Prisma Schema | ✅ **Completed** | Normalized PostgreSQL schema (8 core models), Prisma 6 ORM, migrations, seed script (`Roles`, `AI Providers`, `Admin`, `Demo User`), `PrismaModule` & `PrismaService` |
 | **Phase 2** | Authentication Module | ✅ **Completed** | Registration, login, logout, dual JWT, refresh token rotation with replay detection, bcrypt password hashing, `JwtAuthGuard`, `RolesGuard` |
 | **Phase 3** | User Management & Roles | ✅ **Completed** | Profile retrieval (`GET /api/users/profile`), profile update (`PATCH /api/users/profile`), password change with session invalidation, account deletion, RBAC guard verification |
-| **Phase 4** | Subscription & Quota Management | ⏳ **Next** | Free & Premium tiers, remaining quota API, downgrade/upgrade, rate limiting |
-| **Phase 5** | AI Provider Management & Encryption | ⏳ Upcoming | Dynamic provider management (OpenAI, Claude, Gemini), AES-256 encrypted key storage, health check |
+| **Phase 4** | Subscription & Quota Management | ✅ **Completed** | Free (20/day) & Premium (500/day) plans, auto daily quota reset, upgrade/downgrade endpoints, quota decrementing, 429 enforcement |
+| **Phase 5** | AI Provider Management & Encryption | ⏳ **Next** | Dynamic provider management (OpenAI, Claude, Gemini), AES-256 encrypted key storage, health check |
 | **Phase 6** | Chat API & Model Orchestration | ⏳ Upcoming | Pluggable `AiProviderAdapter`, model routing, conversation history, SSE streaming |
 | **Phase 7** | Web Search API | ⏳ Upcoming | AI-assisted search, caching layer, query history, suggestions |
 | **Phase 8** | Admin Panel APIs | ⏳ Upcoming | Analytics dashboard, user oversight, subscription management, request logs |
@@ -77,15 +77,30 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 - [x] Retrofitted `AuthService` and `UsersService` with structured audit logs
 - [x] Verified full unit and E2E test suites (100% green)
 
-### Phase 4: Subscription Management (UPCOMING — TDD First)
-- [ ] Write Unit tests for subscription quota calculations and limits
-- [ ] Write E2E tests for subscription status, tier upgrade, tier downgrade, and remaining requests
-- [ ] Implement `SubscriptionService` with usage decrementing and daily quota reset logic
-- [ ] Implement `SubscriptionController` at `/api/subscription`:
-  - `GET /api/subscription/status` (current tier, quota, remaining requests)
-  - `POST /api/subscription/upgrade` (upgrade FREE to PREMIUM)
-  - `POST /api/subscription/downgrade` (downgrade PREMIUM to FREE)
-  - `GET /api/subscription/remaining-requests` (returns integer count of remaining queries today)
+### Phase 4: Subscription Management (COMPLETED — Built TDD First)
+- [x] **TDD Unit Tests Written First**: Created `src/modules/subscription/subscription.service.spec.ts` (10 passing tests) covering status, daily auto-reset, missing subscription fallback, upgrade (500 requests), downgrade (20 requests), remaining requests, quota decrementing, and 429 rate limit exception.
+- [x] **TDD E2E Tests Written First**: Created `test/subscription.e2e-spec.ts` (10 passing tests) validating 401 unauthorized guards, initial free tier status, upgrade flow, downgrade flow, and remaining query counts.
+- [x] Implemented `SubscriptionStatusDto` and `RemainingRequestsDto` with OpenAPI/Swagger annotations.
+- [x] Implemented `SubscriptionService`:
+  - `getSubscriptionStatus`: computes remaining requests, handles calendar-day auto-reset (`usedRequestsToday: 0`), and auto-initializes free tier if missing.
+  - `upgradeSubscription`: upgrades user to `PREMIUM` with 500 requests/day and sets 30-day billing cycle.
+  - `downgradeSubscription`: downgrades user to `FREE` with 20 requests/day and clears expiration.
+  - `getRemainingRequests`: returns current query allowance for the day.
+  - `consumeQuota`: increments used requests or throws 429 `TOO_MANY_REQUESTS` if daily limit reached.
+- [x] Implemented `SubscriptionController` at `/api/subscription` with JWT protection.
+- [x] Registered `SubscriptionModule` in `AppModule` and exported `SubscriptionService`.
+- [x] Full automated test suite passing: **56 tests total (28 unit, 28 E2E)**.
+
+### Phase 5: AI Provider Management & Encryption (UPCOMING — TDD First)
+- [ ] Write Unit tests for `CryptoService` AES-256-CBC encryption/decryption roundtrip and secret key validation.
+- [ ] Write E2E tests for AI Provider CRUD, default selection, enable/disable, and health-check endpoints.
+- [ ] Implement `CryptoService` (`src/common/crypto/crypto.service.ts`) using Node.js `crypto` with initialization vectors (IV).
+- [ ] Implement `ProvidersService` and `ProvidersController` (`/api/providers`):
+  - `GET /api/providers` (list active providers, never returning plaintext API key)
+  - `POST /api/providers` (create/configure provider credentials with encrypted key)
+  - `PATCH /api/providers/:id` (update provider models, baseURL, or rotate key)
+  - `POST /api/providers/:id/set-default` (set system default AI provider)
+  - `GET /api/providers/:id/health` (health check pinging mock client in test mode)
 
 ---
 
