@@ -170,6 +170,15 @@ When a user updates their password via `PATCH /api/users/change-password`:
 - Implemented `UsersController` with full Swagger annotations and admin-only test route.
 - Verified all 36 unit and E2E tests passing 100% green.
 
+### Step 7: Observability, Structured Logging & Error Handling (Foundational Infrastructure)
+- **Structured JSON Logging (`nestjs-pino`)**: Integrated Pino logger with environment-adaptive formatting (`pino-pretty` in development, structured JSON in production, `silent` in automated tests).
+- **Request Correlation (`x-request-id`)**: Configured automatic `genReqId` generating cryptographic UUIDs and propagating `x-request-id` response headers for full request lifecycle tracing.
+- **Strict Data Redaction**: Configured Pino redaction rules to censor sensitive fields (`authorization`, `cookie`, `password`, `currentPassword`, `newPassword`, `refreshToken`, `apiKey`) to prevent credential leakage in application logs.
+- **Global Exception Filter (`AllExceptionsFilter`)**: Standardized all error responses with `statusCode`, `timestamp`, `path`, `method`, `requestId`, and `message`. Automatically logs server errors (>= 500) with complete stack traces and user context, and client errors (>= 400) as warnings.
+- **Database Query Observability**: Enabled Prisma query warning and error logging in `PrismaService`.
+- **Domain Audit Logging**: Integrated audit logs in `AuthService` (logins, registrations, token rotation, session revocations) and `UsersService` (password changes, profile updates, account deactivations).
+- Verified test suite passes 100% green (36 tests passing).
+
 ---
 
 ## 🧭 Next Milestone: Phase 4 (Subscription Management — TDD First)

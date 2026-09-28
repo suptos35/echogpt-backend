@@ -68,6 +68,15 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 - [x] Implemented `UsersController` with Swagger docs and RBAC verification endpoint (`GET /api/users/admin-only-test`)
 - [x] All 36 automated unit and E2E tests passing 100% green
 
+### Observability & Structured Logging (Foundational — COMPLETED)
+- [x] Installed `nestjs-pino@4.1.0`, `pino-http@^10.0.0`, and `pino-pretty` in isolated `.venv`
+- [x] Configured `LoggerModule` in `AppModule` with dynamic correlation IDs (`x-request-id` header generation and propagation)
+- [x] Implemented strict log redaction for sensitive credentials (`authorization`, `cookie`, `password`, `refreshToken`, `apiKey`)
+- [x] Implemented `AllExceptionsFilter` (`src/common/filters/all-exceptions.filter.ts`) with standardized error response shape and automatic error/warn logging
+- [x] Configured `PrismaService` warning and error logging
+- [x] Retrofitted `AuthService` and `UsersService` with structured audit logs
+- [x] Verified full unit and E2E test suites (100% green)
+
 ### Phase 4: Subscription Management (UPCOMING — TDD First)
 - [ ] Write Unit tests for subscription quota calculations and limits
 - [ ] Write E2E tests for subscription status, tier upgrade, tier downgrade, and remaining requests

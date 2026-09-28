@@ -3,6 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../common/prisma/prisma.service';
@@ -12,6 +13,8 @@ import { UserProfileDto } from './dto/user-profile.dto';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   /**
@@ -64,6 +67,7 @@ export class UsersService {
       },
     });
 
+    this.logger.log(`User profile updated: userId=${userId}`);
     return {
       id: updatedUser.id,
       email: updatedUser.email,
@@ -99,6 +103,7 @@ export class UsersService {
 
     const isMatch = await bcrypt.compare(dto.currentPassword, user.passwordHash);
     if (!isMatch) {
+      this.logger.warn(`Failed password change attempt: incorrect current password for userId=${userId}`);
       throw new UnauthorizedException('Current password does not match');
     }
 
@@ -119,6 +124,8 @@ export class UsersService {
       where: { userId },
     });
 
+    this.logger.log(`Password changed successfully and all sessions revoked for userId=${userId}`);
+
     return {
       success: true,
       message: 'Password changed successfully',
@@ -137,6 +144,8 @@ export class UsersService {
     await this.prisma.refreshToken.deleteMany({
       where: { userId },
     });
+
+    this.logger.warn(`User account deactivated and active sessions cleared: userId=${userId}`);
 
     return {
       success: true,

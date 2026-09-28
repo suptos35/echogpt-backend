@@ -70,6 +70,7 @@ export class AuthService {
       },
     });
 
+    this.logger.log(`User registered: userId=${newUser.id}, role=${newUser.role.name}`);
     return this.issueTokenFamily(newUser.id, newUser.email, newUser.role.name, newUser.firstName, newUser.lastName);
   }
 
@@ -83,18 +84,22 @@ export class AuthService {
     });
 
     if (!user) {
+      this.logger.warn(`Failed login attempt: email not found for ${dto.email}`);
       throw new UnauthorizedException('Invalid email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isPasswordValid) {
+      this.logger.warn(`Failed login attempt: invalid password for email ${dto.email}`);
       throw new UnauthorizedException('Invalid email or password');
     }
 
     if (!user.isActive) {
+      this.logger.warn(`Failed login attempt: account deactivated for userId ${user.id}`);
       throw new UnauthorizedException('User account has been deactivated');
     }
 
+    this.logger.log(`User login successful: userId=${user.id}`);
     return this.issueTokenFamily(user.id, user.email, user.role.name, user.firstName, user.lastName);
   }
 
@@ -142,9 +147,11 @@ export class AuthService {
 
     const user = storedToken.user;
     if (!user.isActive) {
+      this.logger.warn(`Token refresh failed: account deactivated for userId ${user.id}`);
       throw new UnauthorizedException('User account has been deactivated');
     }
 
+    this.logger.log(`Refresh token rotated successfully for userId=${user.id}`);
     return this.issueTokenFamily(user.id, user.email, user.role.name, user.firstName, user.lastName);
   }
 
@@ -163,6 +170,7 @@ export class AuthService {
       });
     }
 
+    this.logger.log(`User logged out successfully: userId=${userId}`);
     return {
       success: true,
       message: 'Successfully logged out',

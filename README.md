@@ -32,6 +32,7 @@ EchoGPT Backend powers a browser extension providing multi-AI model chat (OpenAI
 - **API Documentation:** Swagger / OpenAPI (`@nestjs/swagger`)
 - **Authentication:** Passport JWT, Bcrypt password hashing
 - **Security & Validation:** `class-validator`, `helmet`, `@nestjs/throttler`, AES-256 encryption (`crypto`)
+- **Logging & Observability:** `nestjs-pino`, `pino-http`, structured JSON, request correlation IDs (`x-request-id`), sensitive data redaction
 - **Containerization:** Docker & Docker Compose / Podman
 - **Testing:** Jest (Unit) & Supertest (E2E) — Built with **TDD First** methodology
 
