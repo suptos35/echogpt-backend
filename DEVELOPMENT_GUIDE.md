@@ -348,11 +348,38 @@ When a user updates their password via `PATCH /api/users/change-password`:
 
 ---
 
-## 🧭 Next Milestone: Phase 11 (README & Submission Polish)
-In Phase 11, we will implement:
-1. Complete README finalization: setup instructions, environment variables table, architecture diagram/description, Swagger and Postman guides, and progress checklist.
-2. Verified one-command bootstrap (`docker compose up -d`).
-3. Final review and preparation of submission materials.
+---
+
+### Step 15: README & Submission Polish (Phase 11)
+- **Documentation Overhaul & Architecture**:
+  - Authored comprehensive `README.md` containing:
+    - High-level executive overview of the EchoGPT Backend REST API.
+    - Mermaid architecture diagram illustrating NestJS Guards, Interceptors, Exception Filters, Service Layer, PostgreSQL 16 schema, and External AI Provider Adapters.
+    - Core features and capabilities breakdown (Dual-Token JWT, Daily Quotas, Multi-AI orchestration, AES-256 key encryption, Web search caching, Admin oversight, Throttling & Helmet hardening).
+    - Complete Environment Variables table with types, defaults, and security descriptions.
+    - One-command Docker Compose bootstrap guide (`docker compose up -d`) with automated migrations and seed script execution.
+    - Local manual development and migration execution instructions.
+    - Automated test execution commands for unit, E2E, and code coverage metrics.
+    - Postman collection and local environment walkthrough with automatic JWT token propagation.
+    - Full API Endpoints reference table detailing HTTP methods, paths, descriptions, and required auth guards.
+    - Phase-by-phase build progress checklist.
+- **Production Containerization Verification**:
+  - Updated `Dockerfile` to multi-stage Node 22-alpine base with runtime Prisma client generation.
+  - Adjusted `package.json` production script to `"start:prod": "node dist/src/main"`.
+  - Added configuration keys for `CORS_ORIGIN`, `RATE_LIMIT_TTL`, and `RATE_LIMIT_MAX` across `.env.example` and `src/config/configuration.ts`.
+- **System Verification**:
+  - Total automated test suite continues to pass at **214/214 tests 100% green**.
+  - ESLint verification clean with 0 errors and 0 warnings.
+
+---
+
+## 🧭 Optional Milestone: Phase 12 (Cloud Deployment - Optional Bonus)
+Per the project specification, the local Dockerized solution and automated test suite are 100% self-contained and reproducible.
+Optional cloud deployment options include:
+1. Render / Railway container deployment with live public URL.
+2. Hosted PostgreSQL instance provisioning.
+3. Live interactive Swagger docs at public cloud URL.
+
 
 
 

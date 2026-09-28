@@ -1,6 +1,13 @@
 export default () => ({
   port: parseInt(process.env.PORT || '3000', 10),
   environment: process.env.NODE_ENV || 'development',
+  cors: {
+    origin: process.env.CORS_ORIGIN || '*',
+  },
+  throttler: {
+    ttl: parseInt(process.env.RATE_LIMIT_TTL || '60000', 10),
+    limit: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
+  },
   database: {
     url:
       process.env.DATABASE_URL ||
