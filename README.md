@@ -125,8 +125,11 @@ npm run test:cov
 | **AI Providers**| `PATCH`| `/api/providers/:id` | Update provider models or rotate encrypted key | Admin Bearer |
 | **AI Providers**| `POST` | `/api/providers/:id/set-default` | Set global default AI provider | Admin Bearer |
 | **AI Providers**| `GET` | `/api/providers/:id/health` | Diagnostic health check | JWT Bearer |
-| **Chat** | `POST` | `/api/chat/send-prompt` | Execute prompt through selected AI provider | JWT Bearer |
-| **Chat** | `GET` | `/api/chat/history` | Retrieve conversation history | JWT Bearer |
+| **Chat** | `POST` | `/api/chat/send-prompt` | Execute prompt through AI provider & persist thread | JWT Bearer |
+| **Chat** | `GET` | `/api/chat/conversations` | List user conversation threads with message counts | JWT Bearer |
+| **Chat** | `GET` | `/api/chat/conversations/:id` | Get full conversation thread with message history | JWT Bearer |
+| **Chat** | `DELETE`| `/api/chat/conversations/:id`| Cascade delete conversation thread and messages | JWT Bearer |
+| **Chat** | `POST` | `/api/chat/stream` | Stream AI completion in real-time via SSE | JWT Bearer |
 | **Search** | `POST` | `/api/search` | AI-assisted web search | JWT Bearer |
 | **Admin** | `GET` | `/api/admin/dashboard` | Dashboard metrics & system stats | Admin Bearer |
 

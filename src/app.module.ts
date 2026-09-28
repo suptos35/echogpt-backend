@@ -12,6 +12,7 @@ import { UsersModule } from './modules/users/users.module';
 import { SubscriptionModule } from './modules/subscription/subscription.module';
 import { CryptoModule } from './common/crypto/crypto.module';
 import { ProvidersModule } from './modules/providers/providers.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -76,6 +77,7 @@ import { ProvidersModule } from './modules/providers/providers.module';
     SubscriptionModule,
     CryptoModule,
     ProvidersModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

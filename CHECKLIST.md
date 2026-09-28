@@ -14,8 +14,8 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 | **Phase 3** | User Management & Roles | ✅ **Completed** | Profile retrieval (`GET /api/users/profile`), profile update (`PATCH /api/users/profile`), password change with session invalidation, account deletion, RBAC guard verification |
 | **Phase 4** | Subscription & Quota Management | ✅ **Completed** | Free (20/day) & Premium (500/day) plans, auto daily quota reset, upgrade/downgrade endpoints, quota decrementing, 429 enforcement |
 | **Phase 5** | AI Provider Management & Encryption | ✅ **Completed** | AES-256-CBC encrypted API key storage, random IVs, provider CRUD, default selection, health checks, key leakage prevention |
-| **Phase 6** | Chat API & Model Orchestration | ⏳ **Next** | Pluggable `AiProviderAdapter`, model routing (Gemini/OpenAI/Claude), conversation history, SSE streaming |
-| **Phase 7** | Web Search API | ⏳ Upcoming | AI-assisted search, caching layer, query history, suggestions |
+| **Phase 6** | Chat API & Model Orchestration | ✅ **Completed** | Pluggable `AiProviderAdapter` (Gemini, OpenAI, Claude), conversation persistence, quota enforcement (429), SSE streaming |
+| **Phase 7** | Web Search API | ⏳ **Next** | AI-assisted search, caching layer, query history, suggestions |
 | **Phase 8** | Admin Panel APIs | ⏳ Upcoming | Analytics dashboard, user oversight, subscription management, request logs |
 | **Phase 9** | Hardening & Security Pass | ⏳ Upcoming | Global exception filter, helmet, rate throttler, validation DTOs, full OpenAPI annotations |
 | **Phase 10** | Test Coverage & Postman Collection | ⏳ Upcoming | Unit + E2E coverage (75-85%), Postman export, GitHub Actions CI workflow |
@@ -110,16 +110,35 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 - [x] Verified database column storage: confirmed PostgreSQL column `encrypted_api_key` contains `<iv_hex>:<ciphertext_hex>` and never raw plaintext.
 - [x] Full automated test suite passing: **81 tests total (42 unit, 39 E2E)**.
 
-### Phase 6: Chat API & Model Orchestration (UPCOMING — TDD First)
-- [ ] Write Unit tests for `AiProviderAdapter` implementations (OpenAI, Claude, Gemini) with mocked HTTP client.
-- [ ] Write E2E tests for conversation creation, message persistence, history retrieval, and quota decrement integration.
-- [ ] Implement `AiProviderAdapter` interface with `GeminiAdapter`, `OpenAiAdapter`, and `ClaudeAdapter`.
-- [ ] Implement `ChatService` and `ChatController`:
-  - `POST /api/chat/send-prompt`: Routes through default/selected provider, checks and decrements subscription quota (enforces 429), stores conversation & message history.
-  - `GET /api/chat/conversations`: Retrieves user conversation list.
-  - `GET /api/chat/conversations/:id`: Retrieves full conversation message history.
-  - `DELETE /api/chat/conversations/:id`: Deletes conversation and messages.
-  - Optional bonus: SSE (Server-Sent Events) streaming endpoint.
+### Phase 6: Chat API & Model Orchestration (COMPLETED — Built TDD First)
+- [x] **TDD Unit Tests Written First**:
+  - `src/modules/chat/adapters/ai-adapters.spec.ts` (6 tests): factory provider resolution, GeminiAdapter mock completion & token estimation, OpenAiAdapter completion, ClaudeAdapter completion.
+  - `src/modules/chat/chat.service.spec.ts` (8 tests): quota consumption integration, 429 rate limit exception bubbling, conversation creation & continuation, history retrieval, message deletion.
+- [x] **TDD E2E Tests Written First**:
+  - `test/chat.e2e-spec.ts` (9 tests): `POST /api/chat/send-prompt` with authentication & validation, quota decrement verification (20 -> 19), multi-turn conversation continuation, conversation list query, full ordered message history retrieval, and conversation deletion.
+- [x] Implemented `AiProviderAdapter` interface and concrete adapters (`GeminiAdapter`, `OpenAiAdapter`, `ClaudeAdapter`) with mock-mode fallbacks for deterministic tests without network dependencies.
+- [x] Implemented `AiProviderFactory` for runtime adapter resolution.
+- [x] Implemented `SendPromptDto`, `SendPromptResponseDto`, `ConversationSummaryDto`, `ConversationDetailDto`, and `MessageItemDto`.
+- [x] Implemented `ChatService` with multi-turn context (last 10 messages), conversation auto-titling, token usage tracking, and inference audit logging.
+- [x] Implemented `ChatController` (`/api/chat`):
+  - `POST /api/chat/send-prompt`: Main inference endpoint.
+  - `GET /api/chat/conversations`: List user conversations with message counts.
+  - `GET /api/chat/conversations/:id`: Retrieve conversation thread with ordered message history.
+  - `DELETE /api/chat/conversations/:id`: Cascade-delete conversation thread.
+  - `POST /api/chat/stream`: Real-time SSE token streaming endpoint.
+- [x] Registered `ChatModule` in `AppModule`.
+- [x] Full automated test suite passing: **104 tests total (56 unit, 48 E2E)**.
+
+### Phase 7: Web Search API (UPCOMING — TDD First)
+- [ ] Write Unit tests for search provider service and in-memory/cache hit-miss handling.
+- [ ] Write E2E tests for `POST /api/search`, query history, recent searches, and suggestion endpoints.
+- [ ] Implement search integration (DuckDuckGo Instant Answer / Brave Search API).
+- [ ] Implement query caching layer (CacheModule or Redis) to save latency and bandwidth.
+- [ ] Implement `WebSearchService` and `WebSearchController` (`/api/search`):
+  - `POST /api/search` (execute query, check cache, return sources/snippets)
+  - `GET /api/search/history` (user search history)
+  - `GET /api/search/recent` (recent distinct queries)
+  - `GET /api/search/suggestions` (autocomplete suggestions based on past queries)
 
 ---
 

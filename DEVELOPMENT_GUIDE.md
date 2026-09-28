@@ -226,17 +226,39 @@ When a user updates their password via `PATCH /api/users/change-password`:
 
 ---
 
-## 🧭 Next Milestone: Phase 6 (Chat API & Model Orchestration — TDD First)
-In Phase 6, we will implement:
-1. Write Unit tests for `AiProviderAdapter` implementations (OpenAI, Claude, Gemini) with mocked HTTP client.
-2. Write E2E tests for conversation creation, message persistence, history retrieval, and quota decrement integration.
-3. Pluggable `AiProviderAdapter` interface with:
-   - `GeminiAdapter` (Google Gemini 1.5 Flash / Pro)
-   - `OpenAiAdapter` (OpenAI GPT-4o / GPT-4o-mini)
-   - `ClaudeAdapter` (Anthropic Claude 3.5 Sonnet)
-4. `ChatService` and `ChatController`:
-   - `POST /api/chat/send-prompt`: Routes prompt through selected or default provider, verifies and decrements subscription quota (enforcing 429), stores conversation & message history.
-   - `GET /api/chat/conversations`: Retrieves user conversation history.
-   - `GET /api/chat/conversations/:id`: Retrieves full conversation thread.
-   - `DELETE /api/chat/conversations/:id`: Deletes conversation and messages.
-   - Bonus: SSE (Server-Sent Events) streaming endpoint.
+### Step 10: Chat API & Multi-Provider Model Orchestration (Phase 6 — TDD First)
+- **TDD Tests First**:
+  - Authored unit test suite `src/modules/chat/adapters/ai-adapters.spec.ts` (6 tests) testing `AiProviderFactory` type mapping, `GeminiAdapter` simulated generation & token counting, `OpenAiAdapter`, and `ClaudeAdapter`.
+  - Authored unit test suite `src/modules/chat/chat.service.spec.ts` (8 tests) verifying quota decrement check, 429 quota exhaustion enforcement, multi-turn thread continuation, conversation list query, detailed thread retrieval, and deletion.
+  - Authored E2E test suite `test/chat.e2e-spec.ts` (9 tests) testing `POST /api/chat/send-prompt`, initial quota deduction (verified 20 -> 19 remaining requests), multi-turn conversation continuation, conversation list query, full ordered message history retrieval, and conversation deletion.
+- **Multi-AI Architecture**:
+  - Implemented `AiProviderAdapter` interface and concrete implementations:
+    - `GeminiAdapter`: Connects to Google Generative Language API (`/v1beta/models/...:generateContent`), with mock-mode fallbacks for deterministic tests without network dependencies.
+    - `OpenAiAdapter`: Connects to OpenAI Chat Completions API (`/v1/chat/completions`).
+    - `ClaudeAdapter`: Connects to Anthropic Messages API (`/v1/messages`).
+    - `AiProviderFactory`: Dynamically selects the appropriate adapter based on provider type.
+- **Conversation & Quota Integration**:
+  - `ChatService` automatically consumes user subscription quota via `SubscriptionService.consumeQuota()` before invoking any LLM, ensuring strict 429 enforcement when the daily limit is exhausted.
+  - Persists multi-turn message history (`MessageRole.USER` and `MessageRole.ASSISTANT`) with token counts in PostgreSQL.
+- **API Endpoints Implemented** (`/api/chat`):
+  - `POST /api/chat/send-prompt`: Main inference endpoint returning model response and token metrics.
+  - `GET /api/chat/conversations`: Lists user conversations with message counts.
+  - `GET /api/chat/conversations/:id`: Returns full conversation thread with ordered messages.
+  - `DELETE /api/chat/conversations/:id`: Deletes conversation and cascades message deletion.
+  - `POST /api/chat/stream`: Real-time SSE token streaming endpoint (`text/event-stream`).
+- **System Verification**:
+  - Total automated test suite expanded to **104 passing tests (56 unit, 48 E2E)** across 15 test suites with 100% green pass rate.
+
+---
+
+## 🧭 Next Milestone: Phase 7 (Web Search API & Caching — TDD First)
+In Phase 7, we will implement:
+1. Write Unit tests for search integration and cache layer.
+2. Write E2E tests for `POST /api/search`, search history, recent searches, and suggestion endpoints.
+3. Web search integration with DuckDuckGo Instant Answer / Brave Search API.
+4. Caching layer (in-memory CacheModule or Redis) to save latency and bandwidth.
+5. `WebSearchService` and `WebSearchController` (`/api/search`):
+   - `POST /api/search` (execute query, cache result, persist to `web_searches` table).
+   - `GET /api/search/history` (user search query log).
+   - `GET /api/search/recent` (distinct recent queries).
+   - `GET /api/search/suggestions` (query autocomplete suggestions).
