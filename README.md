@@ -22,6 +22,7 @@ EchoGPT Backend powers a browser extension providing multi-AI model chat (OpenAI
 - **User & Role Management:** User profile CRUD, password change with session revocation, and RBAC guards (`ADMIN`, `USER`).
 - **Subscription & Quota Management:** Free vs. Premium tiers with remaining request tracking and strict rate limiting.
 - **Admin Panel & System Oversight:** Comprehensive administrative APIs for metrics aggregation, user account activation/deactivation with instant session invalidation, subscription audits, chronological API request logs, and real-time database latency diagnostics.
+- **Security Hardening & Uniform Error Format:** HTTP security headers (`helmet`), strict CORS, rate limiting (`@nestjs/throttler`), payload validation (`class-validator`), and standardized error response envelope (`statusCode`, `timestamp`, `path`, `method`, `requestId`, `message`, `error`).
 - **Interactive OpenAPI Documentation:** Full Swagger UI available at `/api/docs` with Bearer auth support and request/response schemas.
 
 ---

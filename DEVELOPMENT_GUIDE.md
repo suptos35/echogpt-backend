@@ -300,11 +300,32 @@ When a user updates their password via `PATCH /api/users/change-password`:
 
 ---
 
-## 🧭 Next Milestone: Phase 9 (Hardening Pass & Production Readiness)
-In Phase 9, we will implement:
-1. Standardized global error response verification with `AllExceptionsFilter`.
-2. Comprehensive `class-validator` DTO validation audits across every endpoint.
-3. Rate limiting with `@nestjs/throttler` (protecting auth and inference endpoints).
-4. HTTP security headers with `helmet` and production CORS configuration.
-5. Complete Swagger OpenAPI documentation annotations across all remaining routes.
+### Step 13: Hardening Pass & Security Hardening (Phase 9 — TDD First)
+- **TDD Tests First**:
+  - Authored E2E test suite `test/hardening.e2e-spec.ts` (10 tests) covering:
+    - HTTP security response headers (`helmet`: DNS prefetch, content-type nosniff, frame options SAMEORIGIN, HSTS, download options noopen).
+    - Cross-Origin Resource Sharing (CORS allow-origin `*`, preflight OPTIONS handling with allowed headers and methods).
+    - Uniform standardized error response schema validation:
+      - 400 Bad Request with field-level validation messages.
+      - 400 Bad Request rejection of unknown/injected unwhitelisted payload fields.
+      - 404 Not Found formatted with timestamp, path, method, and request correlation ID.
+      - 401 Unauthorized formatted consistently.
+    - OpenAPI 3.0 specification verification (`GET /api/docs-json`) validating all 8 tag modules and JWT Bearer security scheme.
+    - Rate limit enforcement (`@nestjs/throttler`) responding with 429 Too Many Requests when thresholds are exceeded.
+- **Security Hardening Implementation**:
+  - Installed and configured `helmet@^8.3.0` in `main.ts` with relaxed CSP for interactive Swagger documentation.
+  - Installed and configured `@nestjs/throttler@^6.7.1` in `app.module.ts` with global `ThrottlerGuard` wired via `APP_GUARD`.
+  - Refined `AllExceptionsFilter` (`src/common/filters/all-exceptions.filter.ts`) guaranteeing complete uniform schema (`statusCode`, `timestamp`, `path`, `method`, `requestId`, `message`, `error`) across every client and server error.
+  - Enhanced global `ValidationPipe` with `whitelist: true`, `transform: true`, `forbidNonWhitelisted: true`, and `stopAtFirstError: false`.
+- **System Verification**:
+  - Total automated test suite expanded to **169 passing tests (79 unit, 90 E2E)** across 21 test suites with 100% green pass rate.
+
+---
+
+## 🧭 Next Milestone: Phase 10 (Test Coverage & Postman Collection)
+In Phase 10, we will implement:
+1. Test coverage measurement and gap resolution (`npm run test:cov` aiming for 70-85%).
+2. Complete Postman collection generation with pre-configured requests, environment variables, and authentication scripts.
+3. Automated GitHub Actions CI workflow (`.github/workflows/ci.yml`) running lint and test suites on pull requests and pushes to `main`.
+
 

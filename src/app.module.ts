@@ -15,14 +15,32 @@ import { ProvidersModule } from './modules/providers/providers.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { WebSearchModule } from './modules/search/web-search.module';
 import { AdminModule } from './modules/admin/admin.module';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ApiUsageInterceptor } from './common/interceptors/api-usage.interceptor';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
+    }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const env =
+          config.get<string>('environment') ||
+          process.env.NODE_ENV ||
+          'development';
+        const isTest = env === 'test';
+        return [
+          {
+            ttl: 60000,
+            limit: isTest ? 1000 : 100,
+          },
+        ];
+      },
     }),
     LoggerModule.forRootAsync({
       imports: [ConfigModule],
@@ -91,6 +109,10 @@ import { ApiUsageInterceptor } from './common/interceptors/api-usage.interceptor
     {
       provide: APP_INTERCEPTOR,
       useClass: ApiUsageInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

@@ -162,12 +162,20 @@ Tracking progress across all phases of the **EchoGPT Backend REST API** developm
 - [x] Registered `AdminModule` in `AppModule` and configured `APP_INTERCEPTOR`.
 - [x] Full automated test suite passing: **159 tests total (79 unit, 80 E2E) across 20 test suites**.
 
-### Phase 9: Hardening Pass (UPCOMING)
-- [ ] Global exception filter audit & standardized error response schema.
-- [ ] Class-validator DTO verification on every endpoint.
-- [ ] Rate limiting (`@nestjs/throttler`) configuration.
-- [ ] Security headers (`helmet`) & strict CORS.
-- [ ] Swagger API documentation enrichment across all routes.
+### Phase 9: Hardening Pass (COMPLETED — Built TDD First)
+- [x] **TDD E2E Tests Written First**:
+  - `test/hardening.e2e-spec.ts` (10 tests): security headers verification via `helmet` (`x-dns-prefetch-control`, `x-content-type-options`, `x-frame-options`, `strict-transport-security`, `x-download-options`), cross-origin resource sharing (CORS headers and preflight OPTIONS handling), standardized error response schema validation for 400 Bad Request, unwhitelisted field rejection, 404 Not Found, 401 Unauthorized, complete OpenAPI 3.0 specification verification (`/api/docs-json`), and rate limiting (`@nestjs/throttler` 429 threshold enforcement).
+- [x] Installed and configured `helmet@^8.3.0` with relaxed CSP for Swagger UI interactive playground.
+- [x] Installed and configured `@nestjs/throttler@^6.7.1` with `ThrottlerGuard` wired globally via `APP_GUARD`.
+- [x] Standardized `AllExceptionsFilter` (`src/common/filters/all-exceptions.filter.ts`) guaranteeing complete uniform schema across all error types: `statusCode`, `timestamp`, `path`, `method`, `requestId`, `message`, and `error`.
+- [x] Enforced strict validation with global `ValidationPipe` (`whitelist: true`, `transform: true`, `forbidNonWhitelisted: true`, `stopAtFirstError: false`).
+- [x] Full automated test suite passing: **169 tests total (79 unit, 90 E2E) across 21 test suites**.
+
+### Phase 10: Test Coverage & Postman Collection (UPCOMING)
+- [ ] Measure and optimize test coverage with `npm run test:cov` (target 70-85%).
+- [ ] Generate comprehensive Postman collection with environment variables and sample requests.
+- [ ] Add GitHub Actions CI workflow (`.github/workflows/ci.yml`) running lint and automated tests.
+
 
 ---
 

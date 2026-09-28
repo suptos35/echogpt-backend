@@ -26,17 +26,42 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof HttpException ? exception.getResponse() : null;
 
     let message: any = 'Internal server error';
-    let errorName = 'InternalServerError';
+    let errorName: string | undefined;
 
     if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
       const respObj = exceptionResponse as Record<string, any>;
-      message = respObj.message || exceptionResponse;
-      errorName = respObj.error || errorName;
+      message = respObj.message !== undefined ? respObj.message : exceptionResponse;
+      errorName = respObj.error;
     } else if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;
     } else if (exception instanceof Error) {
       message = exception.message;
       errorName = exception.name;
+    }
+
+    if (!errorName) {
+      switch (status) {
+        case HttpStatus.BAD_REQUEST:
+          errorName = 'Bad Request';
+          break;
+        case HttpStatus.UNAUTHORIZED:
+          errorName = 'Unauthorized';
+          break;
+        case HttpStatus.FORBIDDEN:
+          errorName = 'Forbidden';
+          break;
+        case HttpStatus.NOT_FOUND:
+          errorName = 'Not Found';
+          break;
+        case HttpStatus.CONFLICT:
+          errorName = 'Conflict';
+          break;
+        case HttpStatus.TOO_MANY_REQUESTS:
+          errorName = 'Too Many Requests';
+          break;
+        default:
+          errorName = status >= 500 ? 'Internal Server Error' : 'Error';
+      }
     }
 
     const requestId =
@@ -64,11 +89,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
-      path: request.url,
+      path: request.originalUrl || request.url,
       method: request.method,
       requestId,
       message,
-      ...(errorName && errorName !== 'InternalServerError' ? { error: errorName } : {}),
+      error: errorName,
     });
   }
 }
