@@ -111,4 +111,36 @@ describe('ChatController', () => {
       );
     });
   });
+
+  describe('streamPrompt', () => {
+    it('should stream response tokens and close stream', async () => {
+      mockChatService.sendPrompt.mockResolvedValue({
+        conversationId: 'conv-1',
+        response: 'Hello streaming world',
+        tokensUsed: { prompt: 5, completion: 3, total: 8 },
+      });
+
+      const mockReq = { on: jest.fn() };
+      const mockRes = {
+        setHeader: jest.fn(),
+        write: jest.fn(),
+        end: jest.fn(),
+        writableEnded: false,
+      };
+
+      await controller.streamPrompt(
+        'user-1',
+        { prompt: 'hi' },
+        mockReq as any,
+        mockRes as any,
+      );
+
+      expect(mockRes.setHeader).toHaveBeenCalledWith(
+        'Content-Type',
+        'text/event-stream',
+      );
+      expect(mockRes.write).toHaveBeenCalled();
+      expect(mockRes.end).toHaveBeenCalled();
+    });
+  });
 });

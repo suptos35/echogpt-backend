@@ -51,26 +51,39 @@ export class AuthService {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(dto.password, saltRounds);
 
-    const newUser = await this.prisma.user.create({
-      data: {
-        email: dto.email.toLowerCase(),
-        passwordHash,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        roleId: userRole.id,
-        subscription: {
-          create: {
-            planType: PlanType.FREE,
-            status: SubscriptionStatus.ACTIVE,
-            maxRequestsPerDay: 20,
-            usedRequestsToday: 0,
+    let newUser;
+    try {
+      newUser = await this.prisma.user.create({
+        data: {
+          email: dto.email.toLowerCase(),
+          passwordHash,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          roleId: userRole.id,
+          subscription: {
+            create: {
+              planType: PlanType.FREE,
+              status: SubscriptionStatus.ACTIVE,
+              maxRequestsPerDay: 20,
+              usedRequestsToday: 0,
+            },
           },
         },
-      },
-      include: {
-        role: true,
-      },
-    });
+        include: {
+          role: true,
+        },
+      });
+    } catch (err: any) {
+      if (
+        err?.code === 'P2002' ||
+        err?.message?.includes('Unique constraint')
+      ) {
+        throw new ConflictException(
+          'An account with this email already exists',
+        );
+      }
+      throw err;
+    }
 
     this.logger.log(
       `User registered: userId=${newUser.id}, role=${newUser.role.name}`,
@@ -175,9 +188,18 @@ export class AuthService {
     }
 
     // Invalidate the current used refresh token (Rotation)
-    await this.prisma.refreshToken.delete({
-      where: { id: storedToken.id },
-    });
+    try {
+      await this.prisma.refreshToken.delete({
+        where: { id: storedToken.id },
+      });
+    } catch {
+      this.logger.warn(
+        `Concurrent refresh token attempt caught for token id: ${storedToken.id}`,
+      );
+      throw new UnauthorizedException(
+        'Invalid, revoked, or expired refresh token',
+      );
+    }
 
     const user = storedToken.user;
     if (!user.isActive) {

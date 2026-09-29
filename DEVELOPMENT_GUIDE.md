@@ -59,7 +59,7 @@ EchoGPT Backend serves as the backend for the EchoGPT Multi-AI Chrome Extension.
 
 ## 🗄 Database Design & Entity Relationships
 
-The schema is defined in [prisma/schema.prisma](file:///mnt/sda3/projects/Appifydevs/prisma/schema.prisma) with 8 core normalized models:
+The schema is defined in [prisma/schema.prisma](./prisma/schema.prisma) with 8 core normalized models:
 
 | Model | Table Name | Purpose | Key Relations |
 |---|---|---|---|

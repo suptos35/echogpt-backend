@@ -27,6 +27,7 @@ describe('ProvidersController', () => {
     createProvider: jest.fn(),
     updateProvider: jest.fn(),
     setDefaultProvider: jest.fn(),
+    deleteProvider: jest.fn(),
     checkProviderHealth: jest.fn(),
   };
 
@@ -117,6 +118,21 @@ describe('ProvidersController', () => {
       expect(providersService.setDefaultProvider).toHaveBeenCalledWith(
         'prov-1',
       );
+    });
+  });
+
+  describe('delete', () => {
+    it('should delete an AI provider', async () => {
+      mockProvidersService.deleteProvider.mockResolvedValue({
+        success: true,
+        message: 'AI Provider deleted successfully',
+        id: 'prov-1',
+      });
+
+      const result = await controller.delete('prov-1');
+
+      expect(result.success).toBe(true);
+      expect(providersService.deleteProvider).toHaveBeenCalledWith('prov-1');
     });
   });
 

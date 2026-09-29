@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   Body,
   UseGuards,
@@ -133,6 +134,30 @@ export class ProvidersController {
   @ApiResponse({ status: 404, description: 'Provider not found' })
   async setDefault(@Param('id') id: string): Promise<ProviderResponseDto> {
     return this.providersService.setDefaultProvider(id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(RolesGuard)
+  @Roles(RoleName.ADMIN)
+  @ApiOperation({
+    summary: 'Delete AI provider (Admin only)',
+    description:
+      'Permanently deletes an AI provider configuration. Cannot delete the active default provider.',
+  })
+  @ApiParam({ name: 'id', description: 'Provider UUID' })
+  @ApiResponse({
+    status: 200,
+    description: 'AI provider deleted successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Cannot delete default provider' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden — requires ADMIN role' })
+  @ApiResponse({ status: 404, description: 'Provider not found' })
+  async delete(
+    @Param('id') id: string,
+  ): Promise<{ success: boolean; message: string; id: string }> {
+    return this.providersService.deleteProvider(id);
   }
 
   @Get(':id/health')

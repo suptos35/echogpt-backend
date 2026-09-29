@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   Res,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,7 +18,7 @@ import {
   ApiBearerAuth,
   ApiParam,
 } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ChatService } from './chat.service';
@@ -137,8 +138,14 @@ export class ChatController {
   async streamPrompt(
     @CurrentUser('userId') userId: string,
     @Body() dto: SendPromptDto,
+    @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
+    let clientDisconnected = false;
+    req.on('close', () => {
+      clientDisconnected = true;
+    });
+
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -148,26 +155,33 @@ export class ChatController {
       const words = completion.response.split(' ');
 
       for (let i = 0; i < words.length; i++) {
+        if (clientDisconnected || res.writableEnded) {
+          break;
+        }
         const chunk = words[i] + (i < words.length - 1 ? ' ' : '');
         res.write(`data: ${JSON.stringify({ token: chunk, done: false })}\n\n`);
       }
 
-      res.write(
-        `data: ${JSON.stringify({
-          done: true,
-          conversationId: completion.conversationId,
-          tokensUsed: completion.tokensUsed,
-        })}\n\n`,
-      );
-      res.end();
+      if (!clientDisconnected && !res.writableEnded) {
+        res.write(
+          `data: ${JSON.stringify({
+            done: true,
+            conversationId: completion.conversationId,
+            tokensUsed: completion.tokensUsed,
+          })}\n\n`,
+        );
+        res.end();
+      }
     } catch (err: any) {
-      res.write(
-        `data: ${JSON.stringify({
-          error: err.message || 'Stream generation failed',
-          statusCode: err.status || 500,
-        })}\n\n`,
-      );
-      res.end();
+      if (!clientDisconnected && !res.writableEnded) {
+        res.write(
+          `data: ${JSON.stringify({
+            error: err.message || 'Stream generation failed',
+            statusCode: err.status || 500,
+          })}\n\n`,
+        );
+        res.end();
+      }
     }
   }
 }

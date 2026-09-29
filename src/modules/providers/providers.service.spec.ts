@@ -32,6 +32,7 @@ describe('ProvidersService (Unit Tests)', () => {
         create: jest.fn(),
         update: jest.fn(),
         updateMany: jest.fn(),
+        delete: jest.fn(),
       },
       $transaction: jest.fn((callback) => callback(prisma)),
     };
@@ -174,6 +175,57 @@ describe('ProvidersService (Unit Tests)', () => {
 
       expect(health.status).toBe('unhealthy');
       expect(health.message).toContain('disabled');
+    });
+
+    it('should return unhealthy status if provider key is invalid or corrupted', async () => {
+      prisma.aiProvider.findUnique.mockResolvedValue({
+        ...mockProvider,
+        encryptedApiKey: 'invalid-key-ciphertext',
+      });
+      cryptoService.decrypt.mockReturnValue('invalid-key');
+
+      const health = await service.checkProviderHealth('prov-1');
+
+      expect(health.status).toBe('unhealthy');
+      expect(health.message).toContain('invalid');
+    });
+  });
+
+  describe('deleteProvider', () => {
+    it('should delete a non-default provider successfully', async () => {
+      prisma.aiProvider.findUnique.mockResolvedValue({
+        ...mockProvider,
+        id: 'prov-non-default',
+        isDefault: false,
+      });
+      prisma.aiProvider.delete.mockResolvedValue({ id: 'prov-non-default' });
+
+      const result = await service.deleteProvider('prov-non-default');
+
+      expect(result.success).toBe(true);
+      expect(prisma.aiProvider.delete).toHaveBeenCalledWith({
+        where: { id: 'prov-non-default' },
+      });
+    });
+
+    it('should throw BadRequestException when trying to delete default provider', async () => {
+      prisma.aiProvider.findUnique.mockResolvedValue({
+        ...mockProvider,
+        id: 'prov-default',
+        isDefault: true,
+      });
+
+      await expect(service.deleteProvider('prov-default')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw NotFoundException when provider does not exist', async () => {
+      prisma.aiProvider.findUnique.mockResolvedValue(null);
+
+      await expect(service.deleteProvider('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

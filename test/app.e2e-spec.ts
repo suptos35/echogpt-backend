@@ -23,7 +23,13 @@ describe('EchoGPT Backend (e2e)', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res) => {
+        expect(res.body.name).toBe('EchoGPT Backend REST API');
+        expect(res.body.documentation).toBe('/api/docs');
+        expect(res.body.health).toBe('/health');
+        expect(Array.isArray(res.body.modules)).toBe(true);
+        expect(res.body.modules.length).toBeGreaterThan(0);
+      });
   });
 
   it('/health (GET) should return 200 and healthy status', () => {
