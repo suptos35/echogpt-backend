@@ -15,7 +15,7 @@
 
 ## 🌟 Overview
 
-The **EchoGPT Backend** powers a multi-model browser extension with enterprise-grade orchestration across **Google Gemini** (tested & operational on free tier), **OpenAI GPT-4o**, and **Anthropic Claude 3.5 Sonnet**. Built strictly adhering to **Test-Driven Development (TDD First)**, it features at-rest AES-256 encrypted credential management, dual-token JWT rotation, subscription quota tiers, real-time SSE token streaming, AI-assisted web search with TTL caching, administrative diagnostics, and comprehensive observability.
+The **EchoGPT Backend** powers a multi-model browser extension with enterprise-grade orchestration across **Google Gemini** (tested & operational on free tier), **OpenAI GPT-4o**, and **Anthropic Claude 3.5 Sonnet**. It features at-rest AES-256 encrypted credential management, dual-token JWT rotation, subscription quota tiers, real-time SSE token streaming, AI-assisted web search with TTL caching, administrative diagnostics, and comprehensive observability.
 
 ### Key Capabilities
 - **Multi-AI Provider Engine:** Pluggable adapter architecture (`AiProviderAdapter`) supporting Google Gemini (verified live with `gemini-3.5-flash` / `gemini-flash-latest`), OpenAI, and Anthropic Claude with dynamic default provider switching, CRUD/delete provider management, and health probes.
@@ -191,8 +191,7 @@ Send a `POST` request to `http://localhost:3000/api/chat/send-prompt` (or stream
 
 > [!IMPORTANT]
 > **Gemini Free-Tier Model Naming:**
-> - Live end-to-end integration is explicitly tested and verified using **`gemini-3.5-flash`** (or alias **`gemini-flash-latest`**).
-> - Google AI Studio has retired legacy model aliases like `gemini-pro` and `gemini-1.5-flash` on free-tier keys, which will return `404 Not Found` or `400 Bad Request` from the Gemini API.
+> - Live end-to-end integration is explicitly tested and verified using **`gemini-3.5-flash`**.
 > - When testing with OpenAI or Claude, mock adapters are built-in for testing without incurring API billing unless live keys are configured.
 
 ---
@@ -224,8 +223,6 @@ Send a `POST` request to `http://localhost:3000/api/chat/send-prompt` (or stream
 ---
 
 ## 🧪 Testing & Quality Assurance
-
-Our test suite employs a strict **TDD First** methodology where tests were authored prior to implementation code:
 
 ```bash
 # Run all unit tests (19 test suites, 124 tests)
